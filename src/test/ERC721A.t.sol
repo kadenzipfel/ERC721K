@@ -4,6 +4,10 @@ pragma solidity 0.8.10;
 import "ds-test/test.sol";
 import "../ERC721A.sol";
 
+interface CheatCodes {
+  function prank(address) external;
+}
+
 contract MockERC721A is ERC721A {
     constructor(string memory _name, string memory _symbol) ERC721A(_name, _symbol) {}
 
@@ -14,6 +18,7 @@ contract MockERC721A is ERC721A {
 
 contract ERC721ATest is DSTest {
     MockERC721A token;
+    CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
 
     function setUp() public {
         token = new MockERC721A("Token", "TKN");
