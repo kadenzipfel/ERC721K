@@ -162,13 +162,13 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.ownerOf(1), address(0));
     }
 
-    // function testApprove() public {
-    //     token.mint(address(this), 1337);
+    function testApprove() public {
+        token.mint(address(this), 1);
 
-    //     token.approve(address(0xBEEF), 1337);
+        token.approve(address(0xBEEF), 1);
 
-    //     assertEq(token.getApproved(1337), address(0xBEEF));
-    // }
+        assertEq(token.getApproved(1), address(0xBEEF));
+    }
 
     // function testApproveBurn() public {
     //     token.mint(address(this), 1337);
