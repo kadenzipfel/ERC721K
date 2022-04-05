@@ -587,61 +587,42 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(to)), 1);
     }
 
-    // function testSafeMintToERC721Recipient(uint256 id) public {
-    //     ERC721Recipient to = new ERC721Recipient();
+    // TODO: testSafeMintManyToERC721Recipient
 
-    //     token.safeMint(address(to), id);
+    function testSafeMintToERC721RecipientWithData(bytes calldata data) public {
+        ERC721Recipient to = new ERC721Recipient();
 
-    //     assertEq(token.ownerOf(id), address(to));
-    //     assertEq(token.balanceOf(address(to)), 1);
+        token.safeMint(address(to), 1, data);
 
-    //     assertEq(to.operator(), address(this));
-    //     assertEq(to.from(), address(0));
-    //     assertEq(to.id(), id);
-    //     assertBytesEq(to.data(), "");
-    // }
+        assertEq(token.ownerOf(1), address(to));
+        assertEq(token.balanceOf(address(to)), 1);
 
-    // function testSafeMintToERC721RecipientWithData(uint256 id, bytes calldata data) public {
-    //     ERC721Recipient to = new ERC721Recipient();
+        assertEq(to.operator(), address(this));
+        assertEq(to.from(), address(0));
+        assertEq(to.id(), 1);
+        assertBytesEq(to.data(), data);
+    }
 
-    //     token.safeMint(address(to), id, data);
+    // TODO: testSafeMintManyToERC721RecipientWithData
 
-    //     assertEq(token.ownerOf(id), address(to));
-    //     assertEq(token.balanceOf(address(to)), 1);
+    // TODO: testFailMintManyToZero
 
-    //     assertEq(to.operator(), address(this));
-    //     assertEq(to.from(), address(0));
-    //     assertEq(to.id(), id);
-    //     assertBytesEq(to.data(), data);
-    // }
+    function testFailBurnUnMinted(uint256 id) public {
+        token.burn(id);
+    }
 
-    // function testFailMintToZero(uint256 id) public {
-    //     token.mint(address(0), id);
-    // }
+    function testFailDoubleBurn(address to) public {
+        if (to == address(0)) to = address(0xBEEF);
 
-    // function testFailDoubleMint(uint256 id, address to) public {
-    //     if (to == address(0)) to = address(0xBEEF);
+        token.mint(to, 1);
 
-    //     token.mint(to, id);
-    //     token.mint(to, id);
-    // }
+        token.burn(1);
+        token.burn(1);
+    }
 
-    // function testFailBurnUnMinted(uint256 id) public {
-    //     token.burn(id);
-    // }
-
-    // function testFailDoubleBurn(uint256 id, address to) public {
-    //     if (to == address(0)) to = address(0xBEEF);
-
-    //     token.mint(to, id);
-
-    //     token.burn(id);
-    //     token.burn(id);
-    // }
-
-    // function testFailApproveUnMinted(uint256 id, address to) public {
-    //     token.approve(to, id);
-    // }
+    function testFailApproveUnMinted(uint256 id, address to) public {
+        token.approve(to, id);
+    }
 
     // function testFailApproveUnAuthorized(
     //     address owner,
