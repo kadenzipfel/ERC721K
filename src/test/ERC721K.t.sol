@@ -205,16 +205,16 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(from)), 0);
     }
 
-    // function testTransferFromSelf() public {
-    //     token.mint(address(this), 1337);
+    function testTransferFromSelf() public {
+        token.mint(address(this), 1);
 
-    //     token.transferFrom(address(this), address(0xBEEF), 1337);
+        token.transferFrom(address(this), address(0xBEEF), 1);
 
-    //     assertEq(token.getApproved(1337), address(0));
-    //     assertEq(token.ownerOf(1337), address(0xBEEF));
-    //     assertEq(token.balanceOf(address(0xBEEF)), 1);
-    //     assertEq(token.balanceOf(address(this)), 0);
-    // }
+        assertEq(token.getApproved(1), address(0));
+        assertEq(token.ownerOf(1), address(0xBEEF));
+        assertEq(token.balanceOf(address(0xBEEF)), 1);
+        assertEq(token.balanceOf(address(this)), 0);
+    }
 
     // function testTransferFromApproveAll() public {
     //     ERC721KUser from = new ERC721KUser(token);
