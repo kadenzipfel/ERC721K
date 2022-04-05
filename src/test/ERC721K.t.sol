@@ -267,26 +267,26 @@ contract ERC721Test is DSTestPlus {
         assertBytesEq(recipient.data(), "");
     }
 
-    // function testSafeTransferFromToERC721RecipientWithData() public {
-    //     ERC721KUser from = new ERC721KUser(token);
-    //     ERC721Recipient recipient = new ERC721Recipient();
+    function testSafeTransferFromToERC721RecipientWithData() public {
+        ERC721KUser from = new ERC721KUser(token);
+        ERC721Recipient recipient = new ERC721Recipient();
 
-    //     token.mint(address(from), 1337);
+        token.mint(address(from), 1);
 
-    //     from.setApprovalForAll(address(this), true);
+        from.setApprovalForAll(address(this), true);
 
-    //     token.safeTransferFrom(address(from), address(recipient), 1337, "testing 123");
+        token.safeTransferFrom(address(from), address(recipient), 1, "testing 123");
 
-    //     assertEq(token.getApproved(1337), address(0));
-    //     assertEq(token.ownerOf(1337), address(recipient));
-    //     assertEq(token.balanceOf(address(recipient)), 1);
-    //     assertEq(token.balanceOf(address(from)), 0);
+        assertEq(token.getApproved(1), address(0));
+        assertEq(token.ownerOf(1), address(recipient));
+        assertEq(token.balanceOf(address(recipient)), 1);
+        assertEq(token.balanceOf(address(from)), 0);
 
-    //     assertEq(recipient.operator(), address(this));
-    //     assertEq(recipient.from(), address(from));
-    //     assertEq(recipient.id(), 1337);
-    //     assertBytesEq(recipient.data(), "testing 123");
-    // }
+        assertEq(recipient.operator(), address(this));
+        assertEq(recipient.from(), address(from));
+        assertEq(recipient.id(), 1);
+        assertBytesEq(recipient.data(), "testing 123");
+    }
 
     // function testSafeMintToEOA() public {
     //     token.safeMint(address(0xBEEF), 1337);
