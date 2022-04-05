@@ -295,19 +295,19 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(address(0xBEEF))), 1);
     }
 
-    // function testSafeMintToERC721Recipient() public {
-    //     ERC721Recipient to = new ERC721Recipient();
+    function testSafeMintToERC721Recipient() public {
+        ERC721Recipient to = new ERC721Recipient();
 
-    //     token.safeMint(address(to), 1337);
+        token.safeMint(address(to), 1);
 
-    //     assertEq(token.ownerOf(1337), address(to));
-    //     assertEq(token.balanceOf(address(to)), 1);
+        assertEq(token.ownerOf(1), address(to));
+        assertEq(token.balanceOf(address(to)), 1);
 
-    //     assertEq(to.operator(), address(this));
-    //     assertEq(to.from(), address(0));
-    //     assertEq(to.id(), 1337);
-    //     assertBytesEq(to.data(), "");
-    // }
+        assertEq(to.operator(), address(this));
+        assertEq(to.from(), address(0));
+        assertEq(to.id(), 1);
+        assertBytesEq(to.data(), "");
+    }
 
     // function testSafeMintToERC721RecipientWithData() public {
     //     ERC721Recipient to = new ERC721Recipient();
