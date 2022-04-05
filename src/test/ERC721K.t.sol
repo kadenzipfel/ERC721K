@@ -184,26 +184,26 @@ contract ERC721Test is DSTestPlus {
         token.getApproved(1);
     }
 
-    // function testApproveAll() public {
-    //     token.setApprovalForAll(address(0xBEEF), true);
+    function testApproveAll() public {
+        token.setApprovalForAll(address(0xBEEF), true);
 
-    //     assertTrue(token.isApprovedForAll(address(this), address(0xBEEF)));
-    // }
+        assertTrue(token.isApprovedForAll(address(this), address(0xBEEF)));
+    }
 
-    // function testTransferFrom() public {
-    //     ERC721KUser from = new ERC721KUser(token);
+    function testTransferFrom() public {
+        ERC721KUser from = new ERC721KUser(token);
 
-    //     token.mint(address(from), 1337);
+        token.mint(address(from), 1);
 
-    //     from.approve(address(this), 1337);
+        from.approve(address(this), 1);
 
-    //     token.transferFrom(address(from), address(0xBEEF), 1337);
+        token.transferFrom(address(from), address(0xBEEF), 1);
 
-    //     assertEq(token.getApproved(1337), address(0));
-    //     assertEq(token.ownerOf(1337), address(0xBEEF));
-    //     assertEq(token.balanceOf(address(0xBEEF)), 1);
-    //     assertEq(token.balanceOf(address(from)), 0);
-    // }
+        assertEq(token.getApproved(1), address(0));
+        assertEq(token.ownerOf(1), address(0xBEEF));
+        assertEq(token.balanceOf(address(0xBEEF)), 1);
+        assertEq(token.balanceOf(address(from)), 0);
+    }
 
     // function testTransferFromSelf() public {
     //     token.mint(address(this), 1337);
