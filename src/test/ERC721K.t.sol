@@ -159,7 +159,7 @@ contract ERC721Test is DSTestPlus {
 
         assertEq(token.balanceOf(address(0xBEEF)), 0);
         cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
-        assertEq(token.ownerOf(1), address(0));
+        token.ownerOf(1);
     }
 
     function testApprove() public {
@@ -170,17 +170,19 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.getApproved(1), address(0xBEEF));
     }
 
-    // function testApproveBurn() public {
-    //     token.mint(address(this), 1337);
+    function testApproveBurn() public {
+        token.mint(address(this), 1);
 
-    //     token.approve(address(0xBEEF), 1337);
+        token.approve(address(0xBEEF), 1);
 
-    //     token.burn(1337);
+        token.burn(1);
 
-    //     assertEq(token.balanceOf(address(this)), 0);
-    //     assertEq(token.ownerOf(1337), address(0));
-    //     assertEq(token.getApproved(1337), address(0));
-    // }
+        assertEq(token.balanceOf(address(this)), 0);
+        cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
+        token.ownerOf(1);
+        cheats.expectRevert(abi.encodeWithSignature("ApprovalQueryForNonexistentToken()"));
+        token.getApproved(1);
+    }
 
     // function testApproveAll() public {
     //     token.setApprovalForAll(address(0xBEEF), true);
