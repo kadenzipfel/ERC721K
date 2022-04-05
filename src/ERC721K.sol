@@ -363,8 +363,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         if (to == address(0)) revert MintToZeroAddress();
         if (quantity == 0) revert MintZeroQuantity();
 
-        _beforeTokenTransfers(address(0), to, startTokenId, quantity);
-
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
         // updatedIndex overflows if _currentIndex + quantity > 1.2e77 (2**256) - 1
@@ -394,7 +392,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
             }
             _currentIndex = updatedIndex;
         }
-        _afterTokenTransfers(address(0), to, startTokenId, quantity);
     }
 
     /**
@@ -422,8 +419,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
 
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         if (to == address(0)) revert TransferToZeroAddress();
-
-        _beforeTokenTransfers(from, to, tokenId, 1);
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, from);
@@ -454,7 +449,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         }
 
         emit Transfer(from, to, tokenId);
-        _afterTokenTransfers(from, to, tokenId, 1);
     }
 
     /**
@@ -486,8 +480,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
 
             if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         }
-
-        _beforeTokenTransfers(from, address(0), tokenId, 1);
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, from);
@@ -521,7 +513,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         }
 
         emit Transfer(from, address(0), tokenId);
-        _afterTokenTransfers(from, address(0), tokenId, 1);
 
         // Overflow not possible, as _burnCounter cannot be exceed _currentIndex times.
         unchecked {
@@ -570,49 +561,4 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
             }
         }
     }
-
-    /**
-     * @dev Hook that is called before a set of serially-ordered token ids are about to be transferred. This includes minting.
-     * And also called before burning one token.
-     *
-     * startTokenId - the first token id to be transferred
-     * quantity - the amount to be transferred
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, `from`'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, `tokenId` will be burned by `from`.
-     * - `from` and `to` are never both zero.
-     */
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual {}
-
-    /**
-     * @dev Hook that is called after a set of serially-ordered token ids have been transferred. This includes
-     * minting.
-     * And also called after one token has been burned.
-     *
-     * startTokenId - the first token id to be transferred
-     * quantity - the amount to be transferred
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, `from`'s `tokenId` has been
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` has been minted for `to`.
-     * - When `to` is zero, `tokenId` has been burned by `from`.
-     * - `from` and `to` are never both zero.
-     */
-    function _afterTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual {}
 }
