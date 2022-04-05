@@ -288,12 +288,12 @@ contract ERC721Test is DSTestPlus {
         assertBytesEq(recipient.data(), "testing 123");
     }
 
-    // function testSafeMintToEOA() public {
-    //     token.safeMint(address(0xBEEF), 1337);
+    function testSafeMintToEOA() public {
+        token.safeMint(address(0xBEEF), 1);
 
-    //     assertEq(token.ownerOf(1337), address(address(0xBEEF)));
-    //     assertEq(token.balanceOf(address(address(0xBEEF))), 1);
-    // }
+        assertEq(token.ownerOf(1), address(address(0xBEEF)));
+        assertEq(token.balanceOf(address(address(0xBEEF))), 1);
+    }
 
     // function testSafeMintToERC721Recipient() public {
     //     ERC721Recipient to = new ERC721Recipient();
