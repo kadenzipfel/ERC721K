@@ -35,7 +35,7 @@ error URIQueryForNonexistentToken();
  *
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
-contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
+contract ERC721K is ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
 
@@ -226,7 +226,7 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         address owner = ERC721K.ownerOf(tokenId);
         if (to == owner) revert ApprovalToCurrentOwner();
 
-        if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) {
+        if (msg.sender != owner && !isApprovedForAll(owner, msg.sender)) {
             revert ApprovalCallerNotOwnerNorApproved();
         }
 
@@ -237,10 +237,10 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
      * @dev See {IERC721-setApprovalForAll}.
      */
     function setApprovalForAll(address operator, bool approved) public virtual override {
-        if (operator == _msgSender()) revert ApproveToCaller();
+        if (operator == msg.sender) revert ApproveToCaller();
 
-        _operatorApprovals[_msgSender()][operator] = approved;
-        emit ApprovalForAll(_msgSender(), operator, approved);
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -390,9 +390,9 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
 
         if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
 
-        bool isApprovedOrOwner = (_msgSender() == from ||
-            isApprovedForAll(from, _msgSender()) ||
-            getApproved[tokenId] == _msgSender());
+        bool isApprovedOrOwner = (msg.sender == from ||
+            isApprovedForAll(from, msg.sender) ||
+            getApproved[tokenId] == msg.sender);
 
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         if (to == address(0)) revert TransferToZeroAddress();
@@ -453,9 +453,9 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         address from = prevOwnership.addr;
 
         if (approvalCheck) {
-            bool isApprovedOrOwner = (_msgSender() == from ||
-                isApprovedForAll(from, _msgSender()) ||
-                getApproved[tokenId] == _msgSender());
+            bool isApprovedOrOwner = (msg.sender == from ||
+                isApprovedForAll(from, msg.sender) ||
+                getApproved[tokenId] == msg.sender);
 
             if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         }
@@ -530,7 +530,7 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
+        try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, _data) returns (bytes4 retval) {
             return retval == IERC721Receiver(to).onERC721Received.selector;
         } catch (bytes memory reason) {
             if (reason.length == 0) {
