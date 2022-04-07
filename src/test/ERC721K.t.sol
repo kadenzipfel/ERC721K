@@ -153,7 +153,14 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.ownerOf(1), address(0xBEEF));
     }
 
-    // TODO: testMintMany
+    function testMintMany() public {
+        token.mint(address(0xBEEF), 10);
+
+        assertEq(token.balanceOf(address(0xBEEF)), 10);
+        for (uint256 i = 1; i < 11; i++) {
+            assertEq(token.ownerOf(i), address(0xBEEF));
+        }
+    }
 
     // TODO: fuzz testMintMany
 
