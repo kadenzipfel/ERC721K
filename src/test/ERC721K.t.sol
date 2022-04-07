@@ -327,7 +327,21 @@ contract ERC721Test is DSTestPlus {
         assertBytesEq(to.data(), "");
     }
 
-    // TODO: testSafeMintManyToERC721Recipient
+    function testSafeMintManyToERC721Recipient() public {
+        ERC721Recipient to = new ERC721Recipient();
+
+        token.safeMint(address(to), 10);
+
+        assertEq(token.balanceOf(address(to)), 10);
+        for (uint256 i = 1; i <= 10; i++) {
+            assertEq(token.ownerOf(i), address(to));
+        }
+
+        assertEq(to.operator(), address(this));
+        assertEq(to.from(), address(0));
+        assertEq(to.id(), 10);
+        assertBytesEq(to.data(), "");
+    }
 
     function testSafeMintToERC721RecipientWithData() public {
         ERC721Recipient to = new ERC721Recipient();
@@ -343,7 +357,21 @@ contract ERC721Test is DSTestPlus {
         assertBytesEq(to.data(), "testing 123");
     }
 
-    // TODO: testSafeMintManyToERC721RecipientWithData
+    function testSafeMintManyToERC721RecipientWithData() public {
+        ERC721Recipient to = new ERC721Recipient();
+
+        token.safeMint(address(to), 10, "testing 123");
+
+        assertEq(token.balanceOf(address(to)), 10);
+        for (uint256 i = 1; i <= 10; i++) {
+            assertEq(token.ownerOf(i), address(to));
+        }
+
+        assertEq(to.operator(), address(this));
+        assertEq(to.from(), address(0));
+        assertEq(to.id(), 10);
+        assertBytesEq(to.data(), "testing 123");
+    }
 
     function testFailMintToZero() public {
         token.mint(address(0), 1);
