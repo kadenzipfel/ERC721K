@@ -162,8 +162,6 @@ contract ERC721Test is DSTestPlus {
         }
     }
 
-    // TODO: fuzz testMintMany
-
     function testBurn() public {
         token.mint(address(0xBEEF), 1);
         token.burn(1);
@@ -457,7 +455,16 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.ownerOf(1), to);
     }
 
-    // TODO: testMintMany
+    function testMintMany(address to) public {
+        if (to == address(0)) to = address(0xBEEF);
+
+        token.mint(to, 10);
+
+        assertEq(token.balanceOf(to), 10);
+        for (uint256 i = 1; i <= 10; i++) {
+            assertEq(token.ownerOf(i), to);
+        }
+    }
 
     function testBurn(address to) public {
         if (to == address(0)) to = address(0xBEEF);
