@@ -624,8 +624,6 @@ contract ERC721Test is DSTestPlus {
         }
     }
 
-    // TODO: testSafeMintManyToERC721Recipient
-
     function testSafeMintToERC721RecipientWithData(bytes calldata data) public {
         ERC721Recipient to = new ERC721Recipient();
 
@@ -640,7 +638,22 @@ contract ERC721Test is DSTestPlus {
         assertBytesEq(to.data(), data);
     }
 
-    // TODO: testSafeMintManyToERC721RecipientWithData
+    function testSafeMintManyToERC721RecipientWithData(bytes calldata data) public {
+        ERC721Recipient to = new ERC721Recipient();
+
+        token.safeMint(address(to), 10, data);
+
+        for (uint256 i = 1; i <= 10; i++) {
+            assertEq(token.ownerOf(i), address(to));
+        }
+
+        assertEq(token.balanceOf(address(to)), 10);
+
+        assertEq(to.operator(), address(this));
+        assertEq(to.from(), address(0));
+        assertEq(to.id(), 10);
+        assertBytesEq(to.data(), data);
+    }
 
     // TODO: testFailMintManyToZero
 
