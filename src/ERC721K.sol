@@ -70,10 +70,10 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
     uint256 internal _burnCounter;
 
     // Token name
-    string private _name;
+    string public name;
 
     // Token symbol
-    string private _symbol;
+    string public symbol;
 
     // Mapping from token ID to ownership details
     // An empty struct value does not necessarily mean the token is unowned. See _ownershipOf implementation for details.
@@ -88,9 +88,9 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
+    constructor(string memory _name, string memory _symbol) {
+        name = _name;
+        symbol = _symbol;
     }
 
     /**
@@ -198,20 +198,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
      */
     function ownerOf(uint256 tokenId) public view override returns (address) {
         return _ownershipOf(tokenId).addr;
-    }
-
-    /**
-     * @dev See {IERC721Metadata-name}.
-     */
-    function name() public view virtual override returns (string memory) {
-        return _name;
-    }
-
-    /**
-     * @dev See {IERC721Metadata-symbol}.
-     */
-    function symbol() public view virtual override returns (string memory) {
-        return _symbol;
     }
 
     /**
