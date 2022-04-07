@@ -690,7 +690,9 @@ contract ERC721Test is DSTestPlus {
         assertBytesEq(to.data(), data);
     }
 
-    // TODO: testFailMintManyToZero
+    function testFailMintManyToZero(uint64 quantity) public {
+        token.safeMint(address(0), quantity);
+    }
 
     function testFailBurnUnMinted(uint256 id) public {
         token.burn(id);
