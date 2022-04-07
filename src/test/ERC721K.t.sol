@@ -806,5 +806,7 @@ contract ERC721Test is DSTestPlus {
         token.safeMint(address(new WrongReturnDataERC721Recipient()), 1, data);
     }
 
-    // TODO: testFailSafeMintManyToERC721RecipientWithWrongReturnDataWithData
+    function testFailSafeMintManyToERC721RecipientWithWrongReturnDataWithData(bytes calldata data, uint64 quantity) public {
+        token.safeMint(address(new WrongReturnDataERC721Recipient()), quantity, data);
+    }
 }
