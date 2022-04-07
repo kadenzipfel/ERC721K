@@ -189,8 +189,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(this)), 0);
         cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
         token.ownerOf(1);
-        cheats.expectRevert(abi.encodeWithSignature("ApprovalQueryForNonexistentToken()"));
-        token.getApproved(1);
+        assertEq(token.getApproved(1), address(0));
     }
 
     function testApproveAll() public {
@@ -538,8 +537,7 @@ contract ERC721Test is DSTestPlus {
         assertEq(token.balanceOf(address(this)), 0);
         cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
         token.ownerOf(1);
-        cheats.expectRevert(abi.encodeWithSignature("ApprovalQueryForNonexistentToken()"));
-        token.getApproved(1);
+        assertEq(token.getApproved(1), address(0));
     }
 
     function testApproveAll(address to, bool approved) public {

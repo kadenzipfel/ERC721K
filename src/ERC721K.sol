@@ -83,7 +83,7 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
     mapping(address => AddressData) private _addressData;
 
     // Mapping from token ID to approved address
-    mapping(uint256 => address) private _tokenApprovals;
+    mapping(uint256 => address) public getApproved;
 
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
@@ -231,15 +231,6 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         }
 
         _approve(to, tokenId, owner);
-    }
-
-    /**
-     * @dev See {IERC721-getApproved}.
-     */
-    function getApproved(uint256 tokenId) public view override returns (address) {
-        if (!_exists(tokenId)) revert ApprovalQueryForNonexistentToken();
-
-        return _tokenApprovals[tokenId];
     }
 
     /**
@@ -401,7 +392,7 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
 
         bool isApprovedOrOwner = (_msgSender() == from ||
             isApprovedForAll(from, _msgSender()) ||
-            getApproved(tokenId) == _msgSender());
+            getApproved[tokenId] == _msgSender());
 
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         if (to == address(0)) revert TransferToZeroAddress();
@@ -434,6 +425,8 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
             }
         }
 
+        delete getApproved[tokenId];
+
         emit Transfer(from, to, tokenId);
     }
 
@@ -462,7 +455,7 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         if (approvalCheck) {
             bool isApprovedOrOwner = (_msgSender() == from ||
                 isApprovedForAll(from, _msgSender()) ||
-                getApproved(tokenId) == _msgSender());
+                getApproved[tokenId] == _msgSender());
 
             if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         }
@@ -498,6 +491,8 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
             }
         }
 
+        delete getApproved[tokenId];
+
         emit Transfer(from, address(0), tokenId);
 
         // Overflow not possible, as _burnCounter cannot be exceed _currentIndex times.
@@ -516,7 +511,7 @@ contract ERC721K is Context, ERC165, IERC721, IERC721Metadata {
         uint256 tokenId,
         address owner
     ) private {
-        _tokenApprovals[tokenId] = to;
+        getApproved[tokenId] = to;
         emit Approval(owner, to, tokenId);
     }
 
