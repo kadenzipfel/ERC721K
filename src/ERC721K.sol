@@ -29,7 +29,8 @@ error URIQueryForNonexistentToken();
  *
  * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
  * 
- * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A 
+ * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A, 
+ * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol
  */
 contract ERC721K is ERC165, IERC721, IERC721Metadata {
     using Strings for uint256;
