@@ -6,7 +6,6 @@ pragma solidity ^0.8.4;
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol';
-import 'openzeppelin-contracts/contracts/utils/Address.sol';
 import 'openzeppelin-contracts/contracts/utils/Strings.sol';
 import 'openzeppelin-contracts/contracts/utils/introspection/ERC165.sol';
 
@@ -35,7 +34,6 @@ error URIQueryForNonexistentToken();
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
 contract ERC721K is ERC165, IERC721, IERC721Metadata {
-    using Address for address;
     using Strings for uint256;
 
     // Compiler will pack this into a single 256bit word.
@@ -281,7 +279,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
         bytes memory _data
     ) public virtual override {
         _transfer(from, to, tokenId);
-        if (to.isContract() && !_checkContractOnERC721Received(from, to, tokenId, _data)) {
+        if (to.code.length > 0 && !_checkContractOnERC721Received(from, to, tokenId, _data)) {
             revert TransferToNonERC721ReceiverImplementer();
         }
     }
@@ -352,7 +350,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
             uint256 updatedIndex = startTokenId;
             uint256 end = updatedIndex + quantity;
 
-            if (safe && to.isContract()) {
+            if (safe && to.code.length > 0) {
                 do {
                     emit Transfer(address(0), to, updatedIndex);
                     if (!_checkContractOnERC721Received(address(0), to, updatedIndex++, _data)) {
