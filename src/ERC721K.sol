@@ -129,35 +129,6 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     }
 
     /**
-     * Returns the number of tokens minted by `owner`.
-     */
-    function _numberMinted(address owner) internal view returns (uint256) {
-        return uint256(_addressData[owner].numberMinted);
-    }
-
-    /**
-     * Returns the number of tokens burned by or on behalf of `owner`.
-     */
-    function _numberBurned(address owner) internal view returns (uint256) {
-        return uint256(_addressData[owner].numberBurned);
-    }
-
-    /**
-     * Returns the auxillary data for `owner`. (e.g. number of whitelist mint slots used).
-     */
-    function _getAux(address owner) internal view returns (uint64) {
-        return _addressData[owner].aux;
-    }
-
-    /**
-     * Sets the auxillary data for `owner`. (e.g. number of whitelist mint slots used).
-     * If there are multiple variables, please pack them into a uint64.
-     */
-    function _setAux(address owner, uint64 aux) internal {
-        _addressData[owner].aux = aux;
-    }
-
-    /**
      * Gas spent here starts off proportional to the maximum mint batch size.
      * It gradually moves to O(1) as tokens get transferred around in the collection over time.
      */
