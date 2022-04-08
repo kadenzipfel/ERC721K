@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import 'openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol';
-
 error ApprovalCallerNotOwnerNorApproved();
 error ApprovalQueryForNonexistentToken();
 error ApproveToCaller();
@@ -254,7 +252,8 @@ abstract contract ERC721K {
         bytes memory _data
     ) public virtual {
         _transfer(from, to, tokenId);
-        if (to.code.length > 0 && !_checkContractOnERC721Received(from, to, tokenId, _data)) {
+        if (to.code.length > 0 && ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) !=
+                ERC721TokenReceiver.onERC721Received.selector) {
             revert TransferToNonERC721ReceiverImplementer();
         }
     }
@@ -377,7 +376,8 @@ abstract contract ERC721K {
             if (safe && to.code.length > 0) {
                 do {
                     emit Transfer(address(0), to, updatedIndex);
-                    if (!_checkContractOnERC721Received(address(0), to, updatedIndex++, _data)) {
+                    if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), updatedIndex++, _data) !=
+                ERC721TokenReceiver.onERC721Received.selector) {
                         revert TransferToNonERC721ReceiverImplementer();
                     }
                 } while (updatedIndex != end);
@@ -531,32 +531,15 @@ abstract contract ERC721K {
         getApproved[tokenId] = to;
         emit Approval(owner, to, tokenId);
     }
+}
 
-    /**
-     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target contract.
-     *
-     * @param from address representing the previous owner of the given token ID
-     * @param to target address that will receive the tokens
-     * @param tokenId uint256 ID of the token to be transferred
-     * @param _data bytes optional data to send along with the call
-     * @return bool whether the call correctly returned the expected magic value
-     */
-    function _checkContractOnERC721Received(
+/// @notice A generic interface for a contract which properly accepts ERC721 tokens.
+/// @author Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)
+interface ERC721TokenReceiver {
+    function onERC721Received(
+        address operator,
         address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) private returns (bool) {
-        try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, _data) returns (bytes4 retval) {
-            return retval == IERC721Receiver(to).onERC721Received.selector;
-        } catch (bytes memory reason) {
-            if (reason.length == 0) {
-                revert TransferToNonERC721ReceiverImplementer();
-            } else {
-                assembly {
-                    revert(add(32, reason), mload(reason))
-                }
-            }
-        }
-    }
+        uint256 id,
+        bytes calldata data
+    ) external returns (bytes4);
 }

@@ -5,9 +5,7 @@ pragma solidity 0.8.10;
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {DSInvariantTest} from "solmate/test/utils/DSInvariantTest.sol";
 
-import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
-
-import "../ERC721K.sol";
+import {ERC721TokenReceiver, ERC721K} from "../ERC721K.sol";
 
 interface CheatCodes {
   function prank(address) external;
