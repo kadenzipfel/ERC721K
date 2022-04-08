@@ -32,7 +32,7 @@ error URIQueryForNonexistentToken();
  * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A, 
  * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol
  */
-contract ERC721K is ERC165, IERC721, IERC721Metadata {
+abstract contract ERC721K is ERC165, IERC721, IERC721Metadata {
     using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -48,12 +48,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-
-        string memory baseURI = _baseURI();
-        return bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : '';
-    }
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory);
 
     /*//////////////////////////////////////////////////////////////
                              ERC721 STORAGE
@@ -262,26 +257,6 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
         revert OwnerQueryForNonexistentToken();
     }
 
-    /**
-     * @dev Base URI for computing {tokenURI}. If set, the resulting URI for each
-     * token will be the concatenation of the `baseURI` and the `tokenId`. Empty
-     * by default, can be overriden in child contracts.
-     */
-    function _baseURI() internal view virtual returns (string memory) {
-        return '';
-    }
-
-    /**
-     * @dev Returns whether `tokenId` exists.
-     *
-     * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
-     *
-     * Tokens start existing when they are minted (`_mint`),
-     */
-    function _exists(uint256 tokenId) internal view returns (bool) {
-        return tokenId != 0 && tokenId < _currentIndex && !_ownerships[tokenId].burned;
-    }
-
     function _safeMint(address to, uint256 quantity) internal {
         _safeMint(to, quantity, '');
     }
@@ -400,8 +375,6 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
             uint256 nextTokenId = tokenId + 1;
             TokenOwnership storage nextSlot = _ownerships[nextTokenId];
             if (nextSlot.addr == address(0)) {
-                // This will suffice for checking _exists(nextTokenId),
-                // as a burned slot cannot contain the zero address.
                 if (nextTokenId != _currentIndex) {
                     nextSlot.addr = from;
                     nextSlot.startTimestamp = prevOwnership.startTimestamp;
@@ -466,8 +439,6 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
             uint256 nextTokenId = tokenId + 1;
             TokenOwnership storage nextSlot = _ownerships[nextTokenId];
             if (nextSlot.addr == address(0)) {
-                // This will suffice for checking _exists(nextTokenId),
-                // as a burned slot cannot contain the zero address.
                 if (nextTokenId != _currentIndex) {
                     nextSlot.addr = from;
                     nextSlot.startTimestamp = prevOwnership.startTimestamp;

@@ -11,6 +11,8 @@ interface CheatCodes {
 contract MockERC721K is ERC721K {
     constructor(string memory _name, string memory _symbol) ERC721K(_name, _symbol) {}
 
+    function tokenURI(uint256) public pure virtual override returns (string memory) {}
+
     function mint(address to, uint256 quantity, bytes memory _data, bool safe) external {
         _mint(to, quantity, _data, safe);
     }
