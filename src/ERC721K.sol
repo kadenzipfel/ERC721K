@@ -35,6 +35,30 @@ error URIQueryForNonexistentToken();
 contract ERC721K is ERC165, IERC721, IERC721Metadata {
     using Strings for uint256;
 
+    /*//////////////////////////////////////////////////////////////
+                         METADATA STORAGE/LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
+
+        string memory baseURI = _baseURI();
+        return bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : '';
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                             ERC721 STORAGE
+    //////////////////////////////////////////////////////////////*/    
+
     // Compiler will pack this into a single 256bit word.
     struct TokenOwnership {
         // The address of the owner.
@@ -65,12 +89,6 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     // The number of tokens burned.
     uint256 internal _burnCounter;
 
-    // Token name
-    string public name;
-
-    // Token symbol
-    string public symbol;
-
     // Mapping from token ID to ownership details
     // An empty struct value does not necessarily mean the token is unowned. See _ownershipOf implementation for details.
     mapping(uint256 => TokenOwnership) internal _ownerships;
@@ -84,10 +102,18 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) public isApprovedForAll;
 
+    /*//////////////////////////////////////////////////////////////
+                               CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
+
     constructor(string memory _name, string memory _symbol) {
         name = _name;
         symbol = _symbol;
     }
+
+    /*//////////////////////////////////////////////////////////////
+                              ERC721 LOGIC
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @dev Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.
@@ -101,27 +127,6 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     }
 
     /**
-     * Returns the total amount of tokens minted in the contract.
-     */
-    function _totalMinted() internal view returns (uint256) {
-        // Counter underflow is impossible as _currentIndex does not decrement,
-        // and it is initialized to 1
-        unchecked {
-            return _currentIndex - 1;
-        }
-    }
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(IERC721).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId ||
-            super.supportsInterface(interfaceId);
-    }
-
-    /**
      * @dev See {IERC721-balanceOf}.
      */
     function balanceOf(address owner) public view override returns (uint256) {
@@ -130,60 +135,10 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     }
 
     /**
-     * Gas spent here starts off proportional to the maximum mint batch size.
-     * It gradually moves to O(1) as tokens get transferred around in the collection over time.
-     */
-    function _ownershipOf(uint256 tokenId) internal view returns (TokenOwnership memory) {
-        uint256 curr = tokenId;
-
-        unchecked {
-            if (curr != 0 && curr < _currentIndex) {
-                TokenOwnership memory ownership = _ownerships[curr];
-                if (!ownership.burned) {
-                    if (ownership.addr != address(0)) {
-                        return ownership;
-                    }
-                    // Invariant:
-                    // There will always be an ownership that has an address and is not burned
-                    // before an ownership that does not have an address and is not burned.
-                    // Hence, curr will not underflow.
-                    while (true) {
-                        curr--;
-                        ownership = _ownerships[curr];
-                        if (ownership.addr != address(0)) {
-                            return ownership;
-                        }
-                    }
-                }
-            }
-        }
-        revert OwnerQueryForNonexistentToken();
-    }
-
-    /**
      * @dev See {IERC721-ownerOf}.
      */
     function ownerOf(uint256 tokenId) public view override returns (address) {
         return _ownershipOf(tokenId).addr;
-    }
-
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
-
-        string memory baseURI = _baseURI();
-        return bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : '';
-    }
-
-    /**
-     * @dev Base URI for computing {tokenURI}. If set, the resulting URI for each
-     * token will be the concatenation of the `baseURI` and the `tokenId`. Empty
-     * by default, can be overriden in child contracts.
-     */
-    function _baseURI() internal view virtual returns (string memory) {
-        return '';
     }
 
     /**
@@ -245,6 +200,75 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
         if (to.code.length > 0 && !_checkContractOnERC721Received(from, to, tokenId, _data)) {
             revert TransferToNonERC721ReceiverImplementer();
         }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                              ERC165 LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            INTERNAL LOGIC
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * Returns the total amount of tokens minted in the contract.
+     */
+    function _totalMinted() internal view returns (uint256) {
+        // Counter underflow is impossible as _currentIndex does not decrement,
+        // and it is initialized to 1
+        unchecked {
+            return _currentIndex - 1;
+        }
+    }
+
+    /**
+     * Gas spent here starts off proportional to the maximum mint batch size.
+     * It gradually moves to O(1) as tokens get transferred around in the collection over time.
+     */
+    function _ownershipOf(uint256 tokenId) internal view returns (TokenOwnership memory) {
+        uint256 curr = tokenId;
+
+        unchecked {
+            if (curr != 0 && curr < _currentIndex) {
+                TokenOwnership memory ownership = _ownerships[curr];
+                if (!ownership.burned) {
+                    if (ownership.addr != address(0)) {
+                        return ownership;
+                    }
+                    // Invariant:
+                    // There will always be an ownership that has an address and is not burned
+                    // before an ownership that does not have an address and is not burned.
+                    // Hence, curr will not underflow.
+                    while (true) {
+                        curr--;
+                        ownership = _ownerships[curr];
+                        if (ownership.addr != address(0)) {
+                            return ownership;
+                        }
+                    }
+                }
+            }
+        }
+        revert OwnerQueryForNonexistentToken();
+    }
+
+    /**
+     * @dev Base URI for computing {tokenURI}. If set, the resulting URI for each
+     * token will be the concatenation of the `baseURI` and the `tokenId`. Empty
+     * by default, can be overriden in child contracts.
+     */
+    function _baseURI() internal view virtual returns (string memory) {
+        return '';
     }
 
     /**
