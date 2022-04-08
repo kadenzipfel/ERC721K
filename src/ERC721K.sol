@@ -81,7 +81,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     mapping(uint256 => address) public getApproved;
 
     // Mapping from owner to operator approvals
-    mapping(address => mapping(address => bool)) private _operatorApprovals;
+    mapping(address => mapping(address => bool)) public isApprovedForAll;
 
     constructor(string memory _name, string memory _symbol) {
         name = _name;
@@ -192,7 +192,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
         address owner = ERC721K.ownerOf(tokenId);
         if (to == owner) revert ApprovalToCurrentOwner();
 
-        if (msg.sender != owner && !isApprovedForAll(owner, msg.sender)) {
+        if (msg.sender != owner && !isApprovedForAll[owner][msg.sender]) {
             revert ApprovalCallerNotOwnerNorApproved();
         }
 
@@ -205,15 +205,8 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
     function setApprovalForAll(address operator, bool approved) public virtual override {
         if (operator == msg.sender) revert ApproveToCaller();
 
-        _operatorApprovals[msg.sender][operator] = approved;
+        isApprovedForAll[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
-    }
-
-    /**
-     * @dev See {IERC721-isApprovedForAll}.
-     */
-    function isApprovedForAll(address owner, address operator) public view virtual override returns (bool) {
-        return _operatorApprovals[owner][operator];
     }
 
     /**
@@ -357,7 +350,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
         if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
 
         bool isApprovedOrOwner = (msg.sender == from ||
-            isApprovedForAll(from, msg.sender) ||
+            isApprovedForAll[from][msg.sender] ||
             getApproved[tokenId] == msg.sender);
 
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
@@ -420,7 +413,7 @@ contract ERC721K is ERC165, IERC721, IERC721Metadata {
 
         if (approvalCheck) {
             bool isApprovedOrOwner = (msg.sender == from ||
-                isApprovedForAll(from, msg.sender) ||
+                isApprovedForAll[from][msg.sender] ||
                 getApproved[tokenId] == msg.sender);
 
             if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
