@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import 'openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol';
-import 'openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol';
 
 error ApprovalCallerNotOwnerNorApproved();
 error ApprovalQueryForNonexistentToken();
@@ -30,7 +28,26 @@ error URIQueryForNonexistentToken();
  * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A, 
  * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol
  */
-abstract contract ERC721K is IERC721, IERC721Metadata {
+abstract contract ERC721K {
+    /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
+     */
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
+     */
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
     /*//////////////////////////////////////////////////////////////
                          METADATA STORAGE/LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -42,9 +59,9 @@ abstract contract ERC721K is IERC721, IERC721Metadata {
     string public symbol;
 
     /**
-     * @dev See {IERC721Metadata-tokenURI}.
+     * @dev Returns the Uniform Resource Identifier (URI) for `tokenId` token.
      */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory);
+    function tokenURI(uint256 tokenId) public view virtual returns (string memory);
 
     /*//////////////////////////////////////////////////////////////
                              ERC721 STORAGE
@@ -118,24 +135,34 @@ abstract contract ERC721K is IERC721, IERC721Metadata {
     }
 
     /**
-     * @dev See {IERC721-balanceOf}.
+     * @dev Returns the number of tokens in `owner`'s account.
      */
-    function balanceOf(address owner) public view override returns (uint256) {
+    function balanceOf(address owner) public view returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
         return uint256(_addressData[owner].balance);
     }
 
     /**
-     * @dev See {IERC721-ownerOf}.
+     * @dev Returns the owner of the `tokenId` token.
      */
-    function ownerOf(uint256 tokenId) public view override returns (address) {
+    function ownerOf(uint256 tokenId) public view returns (address) {
         return _ownershipOf(tokenId).addr;
     }
 
     /**
-     * @dev See {IERC721-approve}.
+     * @dev Gives permission to `to` to transfer `tokenId` token to another account.
+     * The approval is cleared when the token is transferred.
+     *
+     * Only a single account can be approved at a time, so approving the zero address clears previous approvals.
+     *
+     * Requirements:
+     *
+     * - The caller must own the token or be an approved operator.
+     * - `tokenId` must exist.
+     *
+     * Emits an {Approval} event.
      */
-    function approve(address to, uint256 tokenId) public override {
+    function approve(address to, uint256 tokenId) public {
         address owner = ERC721K.ownerOf(tokenId);
         if (to == owner) revert ApprovalToCurrentOwner();
 
@@ -147,9 +174,16 @@ abstract contract ERC721K is IERC721, IERC721Metadata {
     }
 
     /**
-     * @dev See {IERC721-setApprovalForAll}.
+     * @dev Approve or remove `operator` as an operator for the caller.
+     * Operators can call {transferFrom} or {safeTransferFrom} for any token owned by the caller.
+     *
+     * Requirements:
+     *
+     * - The `operator` cannot be the caller.
+     *
+     * Emits an {ApprovalForAll} event.
      */
-    function setApprovalForAll(address operator, bool approved) public virtual override {
+    function setApprovalForAll(address operator, bool approved) public virtual {
         if (operator == msg.sender) revert ApproveToCaller();
 
         isApprovedForAll[msg.sender][operator] = approved;
@@ -157,36 +191,68 @@ abstract contract ERC721K is IERC721, IERC721Metadata {
     }
 
     /**
-     * @dev See {IERC721-transferFrom}.
+     * @dev Transfers `tokenId` token from `from` to `to`.
+     *
+     * WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     *
+     * Emits a {Transfer} event.
      */
     function transferFrom(
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) public virtual {
         _transfer(from, to, tokenId);
     }
 
     /**
-     * @dev See {IERC721-safeTransferFrom}.
+     * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
+     * are aware of the ERC721 protocol to prevent tokens from being forever locked.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
      */
     function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) public virtual {
         safeTransferFrom(from, to, tokenId, '');
     }
 
     /**
-     * @dev See {IERC721-safeTransferFrom}.
+     * @dev Safely transfers `tokenId` token from `from` to `to`.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must exist and be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
+     *
+     * Emits a {Transfer} event.
      */
     function safeTransferFrom(
         address from,
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) public virtual override {
+    ) public virtual {
         _transfer(from, to, tokenId);
         if (to.code.length > 0 && !_checkContractOnERC721Received(from, to, tokenId, _data)) {
             revert TransferToNonERC721ReceiverImplementer();
