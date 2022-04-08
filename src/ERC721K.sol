@@ -30,8 +30,6 @@ error URIQueryForNonexistentToken();
  * Assumes serials are sequentially minted starting at 1 (e.g. 1, 2, 3..).
  *
  * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
- *
- * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
 contract ERC721K is ERC165, IERC721, IERC721Metadata {
     using Strings for uint256;
