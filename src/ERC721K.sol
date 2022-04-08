@@ -4,7 +4,6 @@ pragma solidity ^0.8.4;
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol';
-import 'openzeppelin-contracts/contracts/utils/introspection/ERC165.sol';
 
 error ApprovalCallerNotOwnerNorApproved();
 error ApprovalQueryForNonexistentToken();
@@ -31,7 +30,7 @@ error URIQueryForNonexistentToken();
  * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A, 
  * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol
  */
-abstract contract ERC721K is ERC165, IERC721, IERC721Metadata {
+abstract contract ERC721K is IERC721, IERC721Metadata {
     /*//////////////////////////////////////////////////////////////
                          METADATA STORAGE/LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -201,11 +200,11 @@ abstract contract ERC721K is ERC165, IERC721, IERC721Metadata {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(IERC721).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return  
+            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
+            interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
+            interfaceId == 0x5b5e139f; // ERC165 Interface ID for ERC721Metadata
     }
 
     /*//////////////////////////////////////////////////////////////
