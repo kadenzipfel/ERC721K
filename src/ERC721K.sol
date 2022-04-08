@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Creator: Chiru Labs
-
 pragma solidity ^0.8.4;
 
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
@@ -30,6 +28,8 @@ error URIQueryForNonexistentToken();
  * Assumes serials are sequentially minted starting at 1 (e.g. 1, 2, 3..).
  *
  * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
+ * 
+ * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A 
  */
 contract ERC721K is ERC165, IERC721, IERC721Metadata {
     using Strings for uint256;
