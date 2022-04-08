@@ -16,15 +16,14 @@ error TransferToZeroAddress();
 error URIQueryForNonexistentToken();
 
 /**
- * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
- * the Metadata extension. Built to optimize for lower gas during batch mints.
+ * @dev Maximally optimized ERC-721 implementation.
  *
  * Assumes serials are sequentially minted starting at 1 (e.g. 1, 2, 3..).
  *
  * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
  * 
  * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A, 
- * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol
+ * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol.
  */
 abstract contract ERC721K {
     /*//////////////////////////////////////////////////////////////
