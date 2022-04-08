@@ -4,7 +4,6 @@ pragma solidity ^0.8.4;
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol';
 import 'openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol';
-import 'openzeppelin-contracts/contracts/utils/Strings.sol';
 import 'openzeppelin-contracts/contracts/utils/introspection/ERC165.sol';
 
 error ApprovalCallerNotOwnerNorApproved();
@@ -33,8 +32,6 @@ error URIQueryForNonexistentToken();
  * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol
  */
 abstract contract ERC721K is ERC165, IERC721, IERC721Metadata {
-    using Strings for uint256;
-
     /*//////////////////////////////////////////////////////////////
                          METADATA STORAGE/LOGIC
     //////////////////////////////////////////////////////////////*/
