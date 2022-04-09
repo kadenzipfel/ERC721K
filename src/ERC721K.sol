@@ -14,11 +14,10 @@ error ERC721__TransferToNonERC721ReceiverImplementer(address receiver);
 error ERC721__TransferToZeroAddress();
 
 /**
- * @dev Maximally optimized ERC-721 implementation.
+ * @notice Maximally optimized, minimalist ERC-721 implementation.
  *
- * Assumes serials are sequentially minted starting at 1 (e.g. 1, 2, 3..).
- *
- * Assumes that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
+ * @dev Assumes serials are sequentially minted starting at 1 (e.g. 1, 2, 3..),
+ * and that an owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
  * 
  * @author https://github.com/kadenzipfel - fork of https://github.com/chiru-labs/ERC721A, 
  * inspired by https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol.
