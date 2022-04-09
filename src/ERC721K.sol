@@ -251,7 +251,7 @@ abstract contract ERC721K {
         bytes memory _data
     ) public virtual {
         _transfer(from, to, tokenId);
-        if (to.code.length > 0 && ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) !=
+        if (to.code.length != 0 && ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) !=
                 ERC721TokenReceiver.onERC721Received.selector) {
             revert TransferToNonERC721ReceiverImplementer();
         }
@@ -372,7 +372,7 @@ abstract contract ERC721K {
             uint256 updatedIndex = startTokenId;
             uint256 end = updatedIndex + quantity;
 
-            if (safe && to.code.length > 0) {
+            if (safe && to.code.length != 0) {
                 do {
                     emit Transfer(address(0), to, updatedIndex);
                     if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), updatedIndex++, _data) !=
