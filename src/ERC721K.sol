@@ -411,8 +411,8 @@ abstract contract ERC721K {
         if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
 
         bool isApprovedOrOwner = (msg.sender == from ||
-            isApprovedForAll[from][msg.sender] ||
-            getApproved[tokenId] == msg.sender);
+            getApproved[tokenId] == msg.sender) ||
+            isApprovedForAll[from][msg.sender];
 
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         if (to == address(0)) revert TransferToZeroAddress();
@@ -472,8 +472,8 @@ abstract contract ERC721K {
 
         if (approvalCheck) {
             bool isApprovedOrOwner = (msg.sender == from ||
-                isApprovedForAll[from][msg.sender] ||
-                getApproved[tokenId] == msg.sender);
+                getApproved[tokenId] == msg.sender) ||
+                isApprovedForAll[from][msg.sender];
 
             if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         }
