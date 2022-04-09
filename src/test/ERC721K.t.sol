@@ -9,7 +9,7 @@ import {ERC721TokenReceiver, ERC721K} from "../ERC721K.sol";
 
 interface CheatCodes {
   function prank(address) external;
-  function expectRevert(bytes calldata) external;
+  function expectRevert(bytes memory) external;
 }
 
 contract MockERC721K is ERC721K {
@@ -167,7 +167,7 @@ contract ERC721Test is DSTestPlus {
         token.burn(1);
 
         assertEq(token.balanceOf(address(0xBEEF)), 0);
-        cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
+        cheats.expectRevert(abi.encodeWithSignature("ERC721__OwnerQueryForNonexistentToken(uint256)", 0x1));
         token.ownerOf(1);
     }
 
@@ -187,7 +187,7 @@ contract ERC721Test is DSTestPlus {
         token.burn(1);
 
         assertEq(token.balanceOf(address(this)), 0);
-        cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
+        cheats.expectRevert(abi.encodeWithSignature("ERC721__OwnerQueryForNonexistentToken(uint256)", 0x1));
         token.ownerOf(1);
         assertEq(token.getApproved(1), address(0));
     }
@@ -513,7 +513,7 @@ contract ERC721Test is DSTestPlus {
         token.burn(1);
 
         assertEq(token.balanceOf(to), 0);
-        cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
+        cheats.expectRevert(abi.encodeWithSignature("ERC721__OwnerQueryForNonexistentToken(uint256)", 0x1));
         token.ownerOf(1);
     }
 
@@ -535,7 +535,7 @@ contract ERC721Test is DSTestPlus {
         token.burn(1);
 
         assertEq(token.balanceOf(address(this)), 0);
-        cheats.expectRevert(abi.encodeWithSignature("OwnerQueryForNonexistentToken()"));
+        cheats.expectRevert(abi.encodeWithSignature("ERC721__OwnerQueryForNonexistentToken(uint256)", 0x1));
         token.ownerOf(1);
         assertEq(token.getApproved(1), address(0));
     }

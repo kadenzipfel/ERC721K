@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-error ApprovalCallerNotOwnerNorApproved();
-error ApprovalQueryForNonexistentToken();
-error ApproveToCaller();
-error ApprovalToCurrentOwner();
-error BalanceQueryForZeroAddress();
-error MintToZeroAddress();
-error MintZeroQuantity();
-error OwnerQueryForNonexistentToken();
-error TransferCallerNotOwnerNorApproved();
-error TransferFromIncorrectOwner();
-error TransferToNonERC721ReceiverImplementer();
-error TransferToZeroAddress();
-error URIQueryForNonexistentToken();
+error ERC721__ApprovalCallerNotOwnerNorApproved(address caller);
+error ERC721__ApproveToCaller();
+error ERC721__ApprovalToCurrentOwner();
+error ERC721__BalanceQueryForZeroAddress();
+error ERC721__MintToZeroAddress();
+error ERC721__MintZeroQuantity();
+error ERC721__OwnerQueryForNonexistentToken(uint256 tokenId);
+error ERC721__TransferCallerNotOwnerNorApproved(address caller);
+error ERC721__TransferFromIncorrectOwner(address from, address owner);
+error ERC721__TransferToNonERC721ReceiverImplementer(address receiver);
+error ERC721__TransferToZeroAddress();
 
 /**
  * @dev Maximally optimized ERC-721 implementation.
@@ -135,7 +133,7 @@ abstract contract ERC721K {
      * @dev Returns the number of tokens in `owner`'s account.
      */
     function balanceOf(address owner) public view returns (uint256) {
-        if (owner == address(0)) revert BalanceQueryForZeroAddress();
+        if (owner == address(0)) revert ERC721__BalanceQueryForZeroAddress();
         return uint256(_addressData[owner].balance);
     }
 
@@ -161,10 +159,10 @@ abstract contract ERC721K {
      */
     function approve(address to, uint256 tokenId) public {
         address owner = ERC721K.ownerOf(tokenId);
-        if (to == owner) revert ApprovalToCurrentOwner();
+        if (to == owner) revert ERC721__ApprovalToCurrentOwner();
 
         if (msg.sender != owner && !isApprovedForAll[owner][msg.sender]) {
-            revert ApprovalCallerNotOwnerNorApproved();
+            revert ERC721__ApprovalCallerNotOwnerNorApproved(msg.sender);
         }
 
         _approve(to, tokenId, owner);
@@ -181,7 +179,7 @@ abstract contract ERC721K {
      * Emits an {ApprovalForAll} event.
      */
     function setApprovalForAll(address operator, bool approved) public virtual {
-        if (operator == msg.sender) revert ApproveToCaller();
+        if (operator == msg.sender) revert ERC721__ApproveToCaller();
 
         isApprovedForAll[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
@@ -253,7 +251,7 @@ abstract contract ERC721K {
         _transfer(from, to, tokenId);
         if (to.code.length != 0 && ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) !=
                 ERC721TokenReceiver.onERC721Received.selector) {
-            revert TransferToNonERC721ReceiverImplementer();
+            revert ERC721__TransferToNonERC721ReceiverImplementer(to);
         }
     }
 
@@ -314,7 +312,7 @@ abstract contract ERC721K {
                 }
             }
         }
-        revert OwnerQueryForNonexistentToken();
+        revert ERC721__OwnerQueryForNonexistentToken(tokenId);
     }
 
     function _safeMint(address to, uint256 quantity) internal {
@@ -356,8 +354,8 @@ abstract contract ERC721K {
         bool safe
     ) internal {
         uint256 startTokenId = _currentIndex;
-        if (to == address(0)) revert MintToZeroAddress();
-        if (quantity == 0) revert MintZeroQuantity();
+        if (to == address(0)) revert ERC721__MintToZeroAddress();
+        if (quantity == 0) revert ERC721__MintZeroQuantity();
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
@@ -377,7 +375,7 @@ abstract contract ERC721K {
                     emit Transfer(address(0), to, updatedIndex);
                     if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), updatedIndex++, _data) !=
                 ERC721TokenReceiver.onERC721Received.selector) {
-                        revert TransferToNonERC721ReceiverImplementer();
+                        revert ERC721__TransferToNonERC721ReceiverImplementer(to);
                     }
                 } while (updatedIndex != end);
                 // Reentrancy protection
@@ -408,14 +406,14 @@ abstract contract ERC721K {
     ) private {
         TokenOwnership memory prevOwnership = _ownershipOf(tokenId);
 
-        if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
+        if (prevOwnership.addr != from) revert ERC721__TransferFromIncorrectOwner(from, prevOwnership.addr);
 
         bool isApprovedOrOwner = (msg.sender == from ||
             getApproved[tokenId] == msg.sender) ||
             isApprovedForAll[from][msg.sender];
 
-        if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
-        if (to == address(0)) revert TransferToZeroAddress();
+        if (!isApprovedOrOwner) revert ERC721__TransferCallerNotOwnerNorApproved(msg.sender);
+        if (to == address(0)) revert ERC721__TransferToZeroAddress();
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, from);
@@ -475,7 +473,7 @@ abstract contract ERC721K {
                 getApproved[tokenId] == msg.sender) ||
                 isApprovedForAll[from][msg.sender];
 
-            if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
+            if (!isApprovedOrOwner) revert ERC721__TransferCallerNotOwnerNorApproved(msg.sender);
         }
 
         // Clear approvals from the previous owner
