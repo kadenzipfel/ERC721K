@@ -24,6 +24,4 @@ Though **this contract has not been professionally audited**, it has a strong [t
 
 I intend to keep this repository active and to continually improve upon the code. If you see any possible improvement, please submit a pull request.
 
-### Disclaimer
-
-This contract has not been professionally audited. By using this contract in any way you assume all risks and liability.
+**DISCLAIMER: This contract has not been professionally audited. By using this contract in any way you assume all risks and liability.**
