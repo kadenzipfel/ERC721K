@@ -1,6 +1,6 @@
 # ERC721K
 
-ERC721K is a maximally efficient, minimalist ERC-721 implementation. Inspired by [solmate/ERC721](https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)'s minimalist architecture and forked from [ERC721A](https://github.com/chiru-labs/ERC721A), the contract seeks to reduce ERC721 gas costs as much as possible.
+ERC721K is a maximally efficient (WIP), minimalist ERC-721 implementation. Inspired by [solmate/ERC721](https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)'s minimalist architecture and forked from [ERC721A](https://github.com/chiru-labs/ERC721A), the contract seeks to reduce ERC721 gas costs as much as possible.
 
 ### Gas
 
