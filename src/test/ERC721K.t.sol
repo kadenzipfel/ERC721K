@@ -772,7 +772,7 @@ contract ERC721Test is DSTestPlus {
         token.safeTransferFrom(address(this), address(new WrongReturnDataERC721Recipient()), 1, data);
     }
 
-    function testFailSafeMintManyToNonERC721Recipient(uint64 quantity) public {
+    function testFailSafeMintManyToNonERC721Recipient(uint8 quantity) public {
         token.safeMint(address(new NonERC721Recipient()), quantity);
     }
 
@@ -780,11 +780,11 @@ contract ERC721Test is DSTestPlus {
         token.safeMint(address(new NonERC721Recipient()), 1, data);
     }
 
-    function testFailSafeMintManyToNonERC721RecipientWithData(bytes calldata data, uint64 quantity) public {
+    function testFailSafeMintManyToNonERC721RecipientWithData(bytes calldata data, uint8 quantity) public {
         token.safeMint(address(new NonERC721Recipient()), quantity, data);
     }
     
-    function testFailSafeMintManyToRevertingERC721Recipient(uint64 quantity) public {
+    function testFailSafeMintManyToRevertingERC721Recipient(uint8 quantity) public {
         token.safeMint(address(new RevertingERC721Recipient()), quantity);
     }
 
@@ -792,11 +792,11 @@ contract ERC721Test is DSTestPlus {
         token.safeMint(address(new RevertingERC721Recipient()), 1, data);
     }
 
-    function testFailSafeMintManyToRevertingERC721RecipientWithData(bytes calldata data, uint64 quantity) public {
+    function testFailSafeMintManyToRevertingERC721RecipientWithData(bytes calldata data, uint8 quantity) public {
         token.safeMint(address(new RevertingERC721Recipient()), quantity, data);
     }
 
-    function testFailSafeMintManyToERC721RecipientWithWrongReturnData(uint64 quantity) public {
+    function testFailSafeMintManyToERC721RecipientWithWrongReturnData(uint8 quantity) public {
         token.safeMint(address(new WrongReturnDataERC721Recipient()), quantity);
     }
 
@@ -804,7 +804,7 @@ contract ERC721Test is DSTestPlus {
         token.safeMint(address(new WrongReturnDataERC721Recipient()), 1, data);
     }
 
-    function testFailSafeMintManyToERC721RecipientWithWrongReturnDataWithData(bytes calldata data, uint64 quantity) public {
+    function testFailSafeMintManyToERC721RecipientWithWrongReturnDataWithData(bytes calldata data, uint8 quantity) public {
         token.safeMint(address(new WrongReturnDataERC721Recipient()), quantity, data);
     }
 }

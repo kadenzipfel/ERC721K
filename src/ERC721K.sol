@@ -371,12 +371,12 @@ abstract contract ERC721K {
 
             if (safe && to.code.length != 0) {
                 do {
-                    emit Transfer(address(0), to, updatedIndex);
-                    if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), updatedIndex++, _data) !=
-                ERC721TokenReceiver.onERC721Received.selector) {
-                        revert ERC721__TransferToNonERC721ReceiverImplementer(to);
-                    }
+                    emit Transfer(address(0), to, updatedIndex++);
                 } while (updatedIndex != end);
+                if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), end - 1, _data) !=
+                ERC721TokenReceiver.onERC721Received.selector) {
+                    revert ERC721__TransferToNonERC721ReceiverImplementer(to);
+                }
                 // Reentrancy protection
                 if (_currentIndex != startTokenId) revert();
             } else {
