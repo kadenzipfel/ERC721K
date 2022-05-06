@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity ^0.8.10;
 
 error ERC721__ApprovalCallerNotOwnerNorApproved(address caller);
 error ERC721__ApproveToCaller();

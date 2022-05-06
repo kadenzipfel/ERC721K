@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Fork of: https://github.com/Rari-Capital/solmate/blob/main/src/test/ERC721.t.sol
-pragma solidity 0.8.10;
+pragma solidity ^0.8.10;
 
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {DSInvariantTest} from "solmate/test/utils/DSInvariantTest.sol";
