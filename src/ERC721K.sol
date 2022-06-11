@@ -597,13 +597,19 @@ abstract contract ERC721K {
                             ASSEMBLY TOOLS
     //////////////////////////////////////////////////////////////*/
 
-    function _isZero(uint256 val) internal pure returns (bool isZero) {
+    /**
+     * @dev Checks if val == 0
+     */
+    function _isZero(uint256 val) private pure returns (bool isZero) {
         assembly {
             isZero := iszero(val)
         }
     }
 
-    function _isZero(address val) internal pure returns (bool isZero) {
+    /**
+     * @dev Checks if val == 0
+     */
+    function _isZero(address val) private pure returns (bool isZero) {
         assembly {
             isZero := iszero(val)
         }
@@ -627,6 +633,9 @@ abstract contract ERC721K {
         }
     }
 
+    /**
+     * @dev Packs ownership data into single uint
+     */
     function _packOwnershipData(address to, uint256 quantity) internal view returns (uint256 packedData) {
         assembly {
             packedData := or(
