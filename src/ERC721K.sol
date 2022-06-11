@@ -24,6 +24,37 @@ error ERC721__TransferToZeroAddress();
  */
 abstract contract ERC721K {
     /*//////////////////////////////////////////////////////////////
+                              CONSTANTS
+    //////////////////////////////////////////////////////////////*/
+
+    // Mask of an entry in packed address data.
+    uint256 private constant BITMASK_ADDRESS_DATA_ENTRY = (1 << 64) - 1;
+
+    // The bit position of `numberMinted` in packed address data.
+    uint256 private constant BITPOS_NUMBER_MINTED = 64;
+
+    // The bit position of `numberBurned` in packed address data.
+    uint256 private constant BITPOS_NUMBER_BURNED = 128;
+
+    // The bit position of `aux` in packed address data.
+    uint256 private constant BITPOS_AUX = 192;
+
+    // Mask of all 256 bits in packed address data except the 64 bits for `aux`.
+    uint256 private constant BITMASK_AUX_COMPLEMENT = (1 << 192) - 1;
+
+    // The bit position of `startTimestamp` in packed ownership.
+    uint256 private constant BITPOS_START_TIMESTAMP = 160;
+
+    // The bit mask of the `burned` bit in packed ownership.
+    uint256 private constant BITMASK_BURNED = 1 << 224;
+
+    // The bit position of the `nextInitialized` bit in packed ownership.
+    uint256 private constant BITPOS_NEXT_INITIALIZED = 225;
+
+    // The bit mask of the `nextInitialized` bit in packed ownership.
+    uint256 private constant BITMASK_NEXT_INITIALIZED = 1 << 225;
+
+    /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
@@ -71,20 +102,6 @@ abstract contract ERC721K {
         bool burned;
     }
 
-    // Compiler will pack this into a single 256bit word.
-    struct AddressData {
-        // Realistically, 2**64-1 is more than enough.
-        uint64 balance;
-        // Keeps track of mint count with minimal overhead for tokenomics.
-        uint64 numberMinted;
-        // Keeps track of burn count with minimal overhead for tokenomics.
-        uint64 numberBurned;
-        // For miscellaneous variable(s) pertaining to the address
-        // (e.g. number of whitelist mint slots used).
-        // If there are multiple variables, please pack them into a uint64.
-        uint64 aux;
-    }
-
     // The tokenId of the next token to be minted.
     uint256 internal _currentIndex = 1;
 
@@ -92,11 +109,24 @@ abstract contract ERC721K {
     uint256 internal _burnCounter;
 
     // Mapping from token ID to ownership details
-    // An empty struct value does not necessarily mean the token is unowned. See _ownershipOf implementation for details.
-    mapping(uint256 => TokenOwnership) internal _ownerships;
+    // An empty struct value does not necessarily mean the token is unowned.
+    // See `_packedOwnershipOf` implementation for details.
+    //
+    // Bits Layout:
+    // - [0..159]   `addr`
+    // - [160..223] `startTimestamp`
+    // - [224]      `burned`
+    // - [225]      `nextInitialized`
+    mapping(uint256 => uint256) private _packedOwnerships;
 
-    // Mapping owner address to address data
-    mapping(address => AddressData) private _addressData;
+    // Mapping owner address to address data.
+    //
+    // Bits Layout:
+    // - [0..63]    `balance`
+    // - [64..127]  `numberMinted`
+    // - [128..191] `numberBurned`
+    // - [192..255] `aux`
+    mapping(address => uint256) private _packedAddressData;
 
     // Mapping from token ID to approved address
     mapping(uint256 => address) public getApproved;
@@ -133,14 +163,14 @@ abstract contract ERC721K {
      */
     function balanceOf(address owner) public view returns (uint256) {
         if (_isZero(owner)) revert ERC721__BalanceQueryForZeroAddress();
-        return uint256(_addressData[owner].balance);
+        return _packedAddressData[owner] & BITMASK_ADDRESS_DATA_ENTRY;
     }
 
     /**
      * @dev Returns the owner of the `tokenId` token.
      */
     function ownerOf(uint256 tokenId) public view returns (address) {
-        return _ownershipOf(tokenId).addr;
+        return address(uint160(_packedOwnershipOf(tokenId)));
     }
 
     /**
@@ -157,7 +187,7 @@ abstract contract ERC721K {
      * Emits an {Approval} event.
      */
     function approve(address to, uint256 tokenId) public {
-        address owner = ERC721K.ownerOf(tokenId);
+        address owner = address(uint160(_packedOwnershipOf(tokenId)));
         if (to == owner) revert ERC721__ApprovalToCurrentOwner();
 
         if (msg.sender != owner && !isApprovedForAll[owner][msg.sender]) {
@@ -284,35 +314,57 @@ abstract contract ERC721K {
     }
 
     /**
-     * Gas spent here starts off proportional to the maximum mint batch size.
-     * It gradually moves to O(1) as tokens get transferred around in the collection over time.
+     * Returns the packed ownership data of `tokenId`.
      */
-    function _ownershipOf(uint256 tokenId) internal view returns (TokenOwnership memory) {
+    function _packedOwnershipOf(uint256 tokenId) private view returns (uint256) {
         if (_isZero(tokenId)) revert ERC721__OwnerQueryForNonexistentToken(tokenId);
 
         unchecked {
             if (tokenId < _currentIndex) {
-                TokenOwnership memory ownership = _ownerships[tokenId];
-                if (!ownership.burned) {
-                    if (ownership.addr != address(0)) {
-                        return ownership;
-                    }
+                uint256 packed = _packedOwnerships[tokenId];
+                // If not burned.
+                if (packed & BITMASK_BURNED == 0) {
                     // Invariant:
                     // There will always be an ownership that has an address and is not burned
                     // before an ownership that does not have an address and is not burned.
                     // Hence, curr will not underflow.
+                    //
+                    // We can directly compare the packed value.
+                    // If the address is zero, packed is zero.
                     uint256 curr = tokenId;
-                    while (true) {
-                        curr--;
-                        ownership = _ownerships[curr];
-                        if (ownership.addr != address(0)) {
-                            return ownership;
-                        }
+                    while (packed == 0) {
+                        packed = _packedOwnerships[--curr];
                     }
+                    return packed;
                 }
             }
         }
         revert ERC721__OwnerQueryForNonexistentToken(tokenId);
+    }
+
+    /**
+     * Returns the unpacked `TokenOwnership` struct from `packed`.
+     */
+    function _unpackedOwnership(uint256 packed) private pure returns (TokenOwnership memory ownership) {
+        ownership.addr = address(uint160(packed));
+        ownership.startTimestamp = uint64(packed >> BITPOS_START_TIMESTAMP);
+        ownership.burned = packed & BITMASK_BURNED != 0;
+    }
+
+    /**
+     * Returns the unpacked `TokenOwnership` struct at `index`.
+     */
+    function _ownershipAt(uint256 index) internal view returns (TokenOwnership memory) {
+        return _unpackedOwnership(_packedOwnerships[index]);
+    }
+
+    /**
+     * @dev Initializes the ownership slot minted at `index` for efficiency purposes.
+     */
+    function _initializeOwnershipAt(uint256 index) internal {
+        if (_packedOwnerships[index] == 0) {
+            _packedOwnerships[index] = _packedOwnershipOf(index);
+        }
     }
 
     function _safeMint(address to, uint256 quantity) internal {
@@ -366,11 +418,22 @@ abstract contract ERC721K {
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
         // updatedIndex overflows if _currentIndex + quantity > 1.2e77 (2**256) - 1
         unchecked {
-            _addressData[to].balance += uint64(quantity);
-            _addressData[to].numberMinted += uint64(quantity);
+            // Updates:
+            // - `balance += quantity`.
+            // - `numberMinted += quantity`.
+            //
+            // We can directly add to the balance and number minted.
+            _packedAddressData[to] += quantity * ((1 << BITPOS_NUMBER_MINTED) | 1);
 
-            _ownerships[startTokenId].addr = to;
-            _ownerships[startTokenId].startTimestamp = uint64(block.timestamp);
+            // Updates:
+            // - `address` to the owner.
+            // - `startTimestamp` to the timestamp of minting.
+            // - `burned` to `false`.
+            // - `nextInitialized` to `quantity == 1`.
+            _packedOwnerships[startTokenId] =
+                _addressToUint256(to) |
+                (block.timestamp << BITPOS_START_TIMESTAMP) |
+                (_boolToUint256(quantity == 1) << BITPOS_NEXT_INITIALIZED);
 
             uint256 updatedIndex = startTokenId;
             uint256 end = updatedIndex + quantity;
@@ -405,9 +468,9 @@ abstract contract ERC721K {
         address to,
         uint256 tokenId
     ) private {
-        TokenOwnership memory prevOwnership = _ownershipOf(tokenId);
+        uint256 prevOwnershipPacked = _packedOwnershipOf(tokenId);
 
-        if (prevOwnership.addr != from) revert ERC721__TransferFromIncorrectOwner(from, prevOwnership.addr);
+        if (address(uint160(prevOwnershipPacked)) != from) revert ERC721__TransferFromIncorrectOwner(from, address(uint160(prevOwnershipPacked)));
 
         bool isApprovedOrOwner = (msg.sender == from ||
             getApproved[tokenId] == msg.sender) ||
@@ -423,21 +486,30 @@ abstract contract ERC721K {
         // ownership above and the recipient's balance can't realistically overflow.
         // Counter overflow is incredibly unrealistic as tokenId would have to be 2**256.
         unchecked {
-            _addressData[from].balance -= 1;
-            _addressData[to].balance += 1;
+            // We can directly increment and decrement the balances.
+            --_packedAddressData[from]; // Updates: `balance -= 1`.
+            ++_packedAddressData[to]; // Updates: `balance += 1`.
 
-            TokenOwnership storage currSlot = _ownerships[tokenId];
-            currSlot.addr = to;
-            currSlot.startTimestamp = uint64(block.timestamp);
+            // Updates:
+            // - `address` to the next owner.
+            // - `startTimestamp` to the timestamp of transfering.
+            // - `burned` to `false`.
+            // - `nextInitialized` to `true`.
+            _packedOwnerships[tokenId] =
+                _addressToUint256(to) |
+                (block.timestamp << BITPOS_START_TIMESTAMP) |
+                BITMASK_NEXT_INITIALIZED;
 
-            // If the ownership slot of tokenId+1 is not explicitly set, that means the transfer initiator owns it.
-            // Set the slot of tokenId+1 explicitly in storage to maintain correctness for ownerOf(tokenId+1) calls.
-            uint256 nextTokenId = tokenId + 1;
-            TokenOwnership storage nextSlot = _ownerships[nextTokenId];
-            if (_isZero(nextSlot.addr)) {
-                if (nextTokenId != _currentIndex) {
-                    nextSlot.addr = from;
-                    nextSlot.startTimestamp = prevOwnership.startTimestamp;
+            // If the next slot may not have been initialized (i.e. `nextInitialized == false`) .
+            if (prevOwnershipPacked & BITMASK_NEXT_INITIALIZED == 0) {
+                uint256 nextTokenId = tokenId + 1;
+                // If the next slot's address is zero and not burned (i.e. packed value is zero).
+                if (_packedOwnerships[nextTokenId] == 0) {
+                    // If the next slot is within bounds.
+                    if (nextTokenId != _currentIndex) {
+                        // Initialize the next slot to maintain correctness for `ownerOf(tokenId + 1)`.
+                        _packedOwnerships[nextTokenId] = prevOwnershipPacked;
+                    }
                 }
             }
         }
@@ -465,9 +537,9 @@ abstract contract ERC721K {
      * Emits a {Transfer} event.
      */
     function _burn(uint256 tokenId, bool approvalCheck) internal virtual {
-        TokenOwnership memory prevOwnership = _ownershipOf(tokenId);
+        uint256 prevOwnershipPacked = _packedOwnershipOf(tokenId);
 
-        address from = prevOwnership.addr;
+        address from = address(uint160(prevOwnershipPacked));
 
         if (approvalCheck) {
             bool isApprovedOrOwner = (msg.sender == from ||
@@ -484,24 +556,35 @@ abstract contract ERC721K {
         // ownership above and the recipient's balance can't realistically overflow.
         // Counter overflow is incredibly unrealistic as tokenId would have to be 2**256.
         unchecked {
-            AddressData storage addressData = _addressData[from];
-            addressData.balance -= 1;
-            addressData.numberBurned += 1;
+            // Updates:
+            // - `balance -= 1`.
+            // - `numberBurned += 1`.
+            //
+            // We can directly decrement the balance, and increment the number burned.
+            // This is equivalent to `packed -= 1; packed += 1 << BITPOS_NUMBER_BURNED;`.
+            _packedAddressData[from] += (1 << BITPOS_NUMBER_BURNED) - 1;
 
-            // Keep track of who burned the token, and the timestamp of burning.
-            TokenOwnership storage currSlot = _ownerships[tokenId];
-            currSlot.addr = from;
-            currSlot.startTimestamp = uint64(block.timestamp);
-            currSlot.burned = true;
+            // Updates:
+            // - `address` to the last owner.
+            // - `startTimestamp` to the timestamp of burning.
+            // - `burned` to `true`.
+            // - `nextInitialized` to `true`.
+            _packedOwnerships[tokenId] =
+                _addressToUint256(from) |
+                (block.timestamp << BITPOS_START_TIMESTAMP) |
+                BITMASK_BURNED | 
+                BITMASK_NEXT_INITIALIZED;
 
-            // If the ownership slot of tokenId+1 is not explicitly set, that means the burn initiator owns it.
-            // Set the slot of tokenId+1 explicitly in storage to maintain correctness for ownerOf(tokenId+1) calls.
-            uint256 nextTokenId = tokenId + 1;
-            TokenOwnership storage nextSlot = _ownerships[nextTokenId];
-            if (_isZero(nextSlot.addr)) {
-                if (nextTokenId != _currentIndex) {
-                    nextSlot.addr = from;
-                    nextSlot.startTimestamp = prevOwnership.startTimestamp;
+            // If the next slot may not have been initialized (i.e. `nextInitialized == false`) .
+            if (prevOwnershipPacked & BITMASK_NEXT_INITIALIZED == 0) {
+                uint256 nextTokenId = tokenId + 1;
+                // If the next slot's address is zero and not burned (i.e. packed value is zero).
+                if (_packedOwnerships[nextTokenId] == 0) {
+                    // If the next slot is within bounds.
+                    if (nextTokenId != _currentIndex) {
+                        // Initialize the next slot to maintain correctness for `ownerOf(tokenId + 1)`.
+                        _packedOwnerships[nextTokenId] = prevOwnershipPacked;
+                    }
                 }
             }
         }
@@ -543,6 +626,24 @@ abstract contract ERC721K {
     function _isZero(address val) internal pure returns (bool isZero) {
         assembly {
             isZero := iszero(val)
+        }
+    }
+
+    /**
+     * @dev Casts the address to uint256 without masking.
+     */
+    function _addressToUint256(address value) private pure returns (uint256 result) {
+        assembly {
+            result := value
+        }
+    }
+
+    /**
+     * @dev Casts the boolean to uint256 without branching.
+     */
+    function _boolToUint256(bool value) private pure returns (uint256 result) {
+        assembly {
+            result := value
         }
     }
 }
