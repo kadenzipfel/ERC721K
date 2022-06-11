@@ -190,7 +190,7 @@ abstract contract ERC721K {
         address owner = address(uint160(_packedOwnershipOf(tokenId)));
         if (to == owner) revert ERC721__ApprovalToCurrentOwner();
 
-        if (msg.sender != owner && !isApprovedForAll[owner][msg.sender]) {
+        if (msg.sender != owner) if (!isApprovedForAll[owner][msg.sender]) {
             revert ERC721__ApprovalCallerNotOwnerNorApproved(msg.sender);
         }
 
@@ -278,7 +278,7 @@ abstract contract ERC721K {
         bytes memory _data
     ) public virtual {
         _transfer(from, to, tokenId);
-        if (to.code.length != 0 && ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) !=
+        if (to.code.length != 0) if (ERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) !=
                 ERC721TokenReceiver.onERC721Received.selector) {
             revert ERC721__TransferToNonERC721ReceiverImplementer(to);
         }
@@ -441,7 +441,7 @@ abstract contract ERC721K {
             do {
                 emit Transfer(address(0), to, updatedIndex++);
             } while (updatedIndex != end);
-            if (safe && to.code.length != 0) {
+            if (safe) if (to.code.length != 0) {
                 if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), end - 1, _data) !=
                 ERC721TokenReceiver.onERC721Received.selector) {
                     revert ERC721__TransferToNonERC721ReceiverImplementer(to);
