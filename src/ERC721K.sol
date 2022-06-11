@@ -386,7 +386,19 @@ abstract contract ERC721K {
         uint256 quantity,
         bytes memory _data
     ) internal {
-        _mint(to, quantity, _data, true);
+        _mint(to, quantity);
+
+        unchecked {
+            if (to.code.length != 0) {
+                uint256 end = _currentIndex;
+                if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), end - 1, _data) !=
+                ERC721TokenReceiver.onERC721Received.selector) {
+                    revert ERC721__TransferToNonERC721ReceiverImplementer(to);
+                }
+                // Reentrancy protection.
+                if (_currentIndex != end) revert();
+            }
+        }
     }
 
     /**
@@ -401,9 +413,7 @@ abstract contract ERC721K {
      */
     function _mint(
         address to,
-        uint256 quantity,
-        bytes memory _data,
-        bool safe
+        uint256 quantity
     ) internal {
         uint256 startTokenId = _currentIndex;
         if (_isZero(to)) revert ERC721__MintToZeroAddress();
@@ -435,21 +445,12 @@ abstract contract ERC721K {
                 (block.timestamp << BITPOS_START_TIMESTAMP) |
                 (_boolToUint256(quantity == 1) << BITPOS_NEXT_INITIALIZED);
 
-            uint256 updatedIndex = startTokenId;
-            uint256 end = updatedIndex + quantity;
-
+            uint256 offset;
             do {
-                emit Transfer(address(0), to, updatedIndex++);
-            } while (updatedIndex != end);
-            if (safe) if (to.code.length != 0) {
-                if (ERC721TokenReceiver(to).onERC721Received(msg.sender, address(0), end - 1, _data) !=
-                ERC721TokenReceiver.onERC721Received.selector) {
-                    revert ERC721__TransferToNonERC721ReceiverImplementer(to);
-                }
-                // Reentrancy protection
-                if (_currentIndex != startTokenId) revert();
-            }
-            _currentIndex = updatedIndex;
+                emit Transfer(address(0), to, startTokenId + offset++);
+            } while (offset < quantity);
+
+            _currentIndex = startTokenId + quantity;
         }
     }
 

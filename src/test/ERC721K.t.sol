@@ -18,7 +18,7 @@ contract MockERC721K is ERC721K {
     function tokenURI(uint256) public pure virtual override returns (string memory) {}
 
     function mint(address to, uint256 quantity) public virtual {
-        _mint(to, quantity, '', false);
+        _mint(to, quantity);
     }
 
     function burn(uint256 tokenId) public virtual {
