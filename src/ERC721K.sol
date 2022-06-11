@@ -323,7 +323,7 @@ abstract contract ERC721K {
             if (tokenId < _currentIndex) {
                 uint256 packed = _packedOwnerships[tokenId];
                 // If not burned.
-                if (packed & BITMASK_BURNED == 0) {
+                if (_isZero(packed & BITMASK_BURNED)) {
                     // Invariant:
                     // There will always be an ownership that has an address and is not burned
                     // before an ownership that does not have an address and is not burned.
@@ -332,7 +332,7 @@ abstract contract ERC721K {
                     // We can directly compare the packed value.
                     // If the address is zero, packed is zero.
                     uint256 curr = tokenId;
-                    while (packed == 0) {
+                    while (_isZero(packed)) {
                         packed = _packedOwnerships[--curr];
                     }
                     return packed;
@@ -362,7 +362,7 @@ abstract contract ERC721K {
      * @dev Initializes the ownership slot minted at `index` for efficiency purposes.
      */
     function _initializeOwnershipAt(uint256 index) internal {
-        if (_packedOwnerships[index] == 0) {
+        if (_isZero(_packedOwnerships[index])) {
             _packedOwnerships[index] = _packedOwnershipOf(index);
         }
     }
@@ -501,10 +501,10 @@ abstract contract ERC721K {
                 BITMASK_NEXT_INITIALIZED;
 
             // If the next slot may not have been initialized (i.e. `nextInitialized == false`) .
-            if (prevOwnershipPacked & BITMASK_NEXT_INITIALIZED == 0) {
+            if (_isZero(prevOwnershipPacked & BITMASK_NEXT_INITIALIZED)) {
                 uint256 nextTokenId = tokenId + 1;
                 // If the next slot's address is zero and not burned (i.e. packed value is zero).
-                if (_packedOwnerships[nextTokenId] == 0) {
+                if (_isZero(_packedOwnerships[nextTokenId])) {
                     // If the next slot is within bounds.
                     if (nextTokenId != _currentIndex) {
                         // Initialize the next slot to maintain correctness for `ownerOf(tokenId + 1)`.
@@ -576,10 +576,10 @@ abstract contract ERC721K {
                 BITMASK_NEXT_INITIALIZED;
 
             // If the next slot may not have been initialized (i.e. `nextInitialized == false`) .
-            if (prevOwnershipPacked & BITMASK_NEXT_INITIALIZED == 0) {
+            if (_isZero(prevOwnershipPacked & BITMASK_NEXT_INITIALIZED)) {
                 uint256 nextTokenId = tokenId + 1;
                 // If the next slot's address is zero and not burned (i.e. packed value is zero).
-                if (_packedOwnerships[nextTokenId] == 0) {
+                if (_isZero(_packedOwnerships[nextTokenId])) {
                     // If the next slot is within bounds.
                     if (nextTokenId != _currentIndex) {
                         // Initialize the next slot to maintain correctness for `ownerOf(tokenId + 1)`.
