@@ -422,10 +422,7 @@ abstract contract ERC721K {
             // - `startTimestamp` to the timestamp of minting.
             // - `burned` to `false`.
             // - `nextInitialized` to `quantity == 1`.
-            _packedOwnerships[startTokenId] =
-                _addressToUint256(to) |
-                (block.timestamp << BITPOS_START_TIMESTAMP) |
-                (_boolToUint256(quantity == 1) << BITPOS_NEXT_INITIALIZED);
+            _packedOwnerships[startTokenId] = _packOwnershipData(to, quantity);
 
             uint256 offset;
             do {
@@ -627,6 +624,24 @@ abstract contract ERC721K {
     function _boolToUint256(bool value) private pure returns (uint256 result) {
         assembly {
             result := value
+        }
+    }
+
+    function _packOwnershipData(address to, uint256 quantity) internal view returns (uint256 packedData) {
+        assembly {
+            packedData := or(
+                to, 
+                or(
+                    shl(
+                        BITPOS_START_TIMESTAMP, 
+                        timestamp()
+                    ), 
+                    shl(
+                        BITPOS_NEXT_INITIALIZED, 
+                        eq(quantity, 1)
+                    )
+                )
+            )
         }
     }
 }
