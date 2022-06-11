@@ -343,22 +343,6 @@ abstract contract ERC721K {
     }
 
     /**
-     * Returns the unpacked `TokenOwnership` struct from `packed`.
-     */
-    function _unpackedOwnership(uint256 packed) private pure returns (TokenOwnership memory ownership) {
-        ownership.addr = address(uint160(packed));
-        ownership.startTimestamp = uint64(packed >> BITPOS_START_TIMESTAMP);
-        ownership.burned = packed & BITMASK_BURNED != 0;
-    }
-
-    /**
-     * Returns the unpacked `TokenOwnership` struct at `index`.
-     */
-    function _ownershipAt(uint256 index) internal view returns (TokenOwnership memory) {
-        return _unpackedOwnership(_packedOwnerships[index]);
-    }
-
-    /**
      * @dev Initializes the ownership slot minted at `index` for efficiency purposes.
      */
     function _initializeOwnershipAt(uint256 index) internal {
