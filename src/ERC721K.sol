@@ -5,8 +5,7 @@ error ERC721__ApprovalCallerNotOwnerNorApproved(address caller);
 error ERC721__ApproveToCaller();
 error ERC721__ApprovalToCurrentOwner();
 error ERC721__BalanceQueryForZeroAddress();
-error ERC721__MintToZeroAddress();
-error ERC721__MintZeroQuantity();
+error ERC721__InvalidMintParams();
 error ERC721__OwnerQueryForNonexistentToken(uint256 tokenId);
 error ERC721__TransferCallerNotOwnerNorApproved(address caller);
 error ERC721__TransferFromIncorrectOwner(address from, address owner);
@@ -400,13 +399,12 @@ abstract contract ERC721K {
         uint256 quantity
     ) internal {
         uint256 startTokenId = _currentIndex;
-        if (_isZero(to)) revert ERC721__MintToZeroAddress();
 
-        bool zeroQuantity;
+        bool invalidParams;
         assembly {
-            zeroQuantity := iszero(quantity)
+            invalidParams := or(iszero(to), iszero(quantity))
         }
-        if (zeroQuantity) revert ERC721__MintZeroQuantity();
+        if (invalidParams) revert ERC721__InvalidMintParams();
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
