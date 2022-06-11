@@ -288,13 +288,11 @@ abstract contract ERC721K {
      * It gradually moves to O(1) as tokens get transferred around in the collection over time.
      */
     function _ownershipOf(uint256 tokenId) internal view returns (TokenOwnership memory) {
-        uint256 curr = tokenId;
-
-        if (_isZero(curr)) revert ERC721__OwnerQueryForNonexistentToken(tokenId);
+        if (_isZero(tokenId)) revert ERC721__OwnerQueryForNonexistentToken(tokenId);
 
         unchecked {
-            if (curr < _currentIndex) {
-                TokenOwnership memory ownership = _ownerships[curr];
+            if (tokenId < _currentIndex) {
+                TokenOwnership memory ownership = _ownerships[tokenId];
                 if (!ownership.burned) {
                     if (ownership.addr != address(0)) {
                         return ownership;
@@ -303,6 +301,7 @@ abstract contract ERC721K {
                     // There will always be an ownership that has an address and is not burned
                     // before an ownership that does not have an address and is not burned.
                     // Hence, curr will not underflow.
+                    uint256 curr = tokenId;
                     while (true) {
                         curr--;
                         ownership = _ownerships[curr];
