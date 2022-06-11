@@ -132,7 +132,7 @@ abstract contract ERC721K {
      * @dev Returns the number of tokens in `owner`'s account.
      */
     function balanceOf(address owner) public view returns (uint256) {
-        if (owner == address(0)) revert ERC721__BalanceQueryForZeroAddress();
+        if (_isZero(owner)) revert ERC721__BalanceQueryForZeroAddress();
         return uint256(_addressData[owner].balance);
     }
 
@@ -290,8 +290,10 @@ abstract contract ERC721K {
     function _ownershipOf(uint256 tokenId) internal view returns (TokenOwnership memory) {
         uint256 curr = tokenId;
 
+        if (_isZero(curr)) revert ERC721__OwnerQueryForNonexistentToken(tokenId);
+
         unchecked {
-            if (curr != 0 && curr < _currentIndex) {
+            if (curr < _currentIndex) {
                 TokenOwnership memory ownership = _ownerships[curr];
                 if (!ownership.burned) {
                     if (ownership.addr != address(0)) {
@@ -353,8 +355,13 @@ abstract contract ERC721K {
         bool safe
     ) internal {
         uint256 startTokenId = _currentIndex;
-        if (to == address(0)) revert ERC721__MintToZeroAddress();
-        if (quantity == 0) revert ERC721__MintZeroQuantity();
+        if (_isZero(to)) revert ERC721__MintToZeroAddress();
+
+        bool zeroQuantity;
+        assembly {
+            zeroQuantity := iszero(quantity)
+        }
+        if (zeroQuantity) revert ERC721__MintZeroQuantity();
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
@@ -408,7 +415,7 @@ abstract contract ERC721K {
             isApprovedForAll[from][msg.sender];
 
         if (!isApprovedOrOwner) revert ERC721__TransferCallerNotOwnerNorApproved(msg.sender);
-        if (to == address(0)) revert ERC721__TransferToZeroAddress();
+        if (_isZero(to)) revert ERC721__TransferToZeroAddress();
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, from);
@@ -428,7 +435,7 @@ abstract contract ERC721K {
             // Set the slot of tokenId+1 explicitly in storage to maintain correctness for ownerOf(tokenId+1) calls.
             uint256 nextTokenId = tokenId + 1;
             TokenOwnership storage nextSlot = _ownerships[nextTokenId];
-            if (nextSlot.addr == address(0)) {
+            if (_isZero(nextSlot.addr)) {
                 if (nextTokenId != _currentIndex) {
                     nextSlot.addr = from;
                     nextSlot.startTimestamp = prevOwnership.startTimestamp;
@@ -492,7 +499,7 @@ abstract contract ERC721K {
             // Set the slot of tokenId+1 explicitly in storage to maintain correctness for ownerOf(tokenId+1) calls.
             uint256 nextTokenId = tokenId + 1;
             TokenOwnership storage nextSlot = _ownerships[nextTokenId];
-            if (nextSlot.addr == address(0)) {
+            if (_isZero(nextSlot.addr)) {
                 if (nextTokenId != _currentIndex) {
                     nextSlot.addr = from;
                     nextSlot.startTimestamp = prevOwnership.startTimestamp;
@@ -522,6 +529,22 @@ abstract contract ERC721K {
     ) private {
         getApproved[tokenId] = to;
         emit Approval(owner, to, tokenId);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            ASSEMBLY TOOLS
+    //////////////////////////////////////////////////////////////*/
+
+    function _isZero(uint256 val) internal pure returns (bool isZero) {
+        assembly {
+            isZero := iszero(val)
+        }
+    }
+
+    function _isZero(address val) internal pure returns (bool isZero) {
+        assembly {
+            isZero := iszero(val)
+        }
     }
 }
 
