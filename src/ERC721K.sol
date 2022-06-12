@@ -391,7 +391,10 @@ abstract contract ERC721K {
     ) internal {
         uint256 startTokenId = _currentIndex;
 
-        if (_isOneZero(to, quantity)) revert ERC721__InvalidMintParams();
+        assembly {
+            if or(iszero(to), iszero(quantity)) { revert(0, 0) }
+        }
+        // if (_isOneZero(to, quantity)) revert ERC721__InvalidMintParams();
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
@@ -449,7 +452,7 @@ abstract contract ERC721K {
         if (_isZero(to)) revert ERC721__TransferToZeroAddress();
 
         // Clear approvals from the previous owner
-        if (!_isEqual(approvedAddress, 0)) {
+        if (!_isZero(approvedAddress)) {
             delete getApproved[tokenId];
         }
 
@@ -517,7 +520,7 @@ abstract contract ERC721K {
         }
 
         // Clear approvals from the previous owner
-        if (!_isEqual(approvedAddress, 0)) {
+        if (!_isZero(approvedAddress)) {
             delete getApproved[tokenId];
         }
 
@@ -594,15 +597,6 @@ abstract contract ERC721K {
     function _isZero(address val) private pure returns (bool isZero) {
         assembly {
             isZero := iszero(val)
-        }
-    }
-
-    /**
-     * @dev Simple comparison between address and uint
-     */
-    function _isEqual(address addr, uint num) private pure returns (bool result) {
-        assembly {
-            result := eq(addr, num)
         }
     }
 
