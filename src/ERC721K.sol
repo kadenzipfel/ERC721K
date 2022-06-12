@@ -450,7 +450,7 @@ abstract contract ERC721K {
     ) private {
         uint256 prevOwnershipPacked = _packedOwnershipOf(tokenId);
 
-        if (address(uint160(prevOwnershipPacked)) != from) revert ERC721__TransferFromIncorrectOwner(from, address(uint160(prevOwnershipPacked)));
+        if (_isEqual(from, prevOwnershipPacked)) revert ERC721__TransferFromIncorrectOwner(from, address(uint160(prevOwnershipPacked)));
 
         address approvedAddress = getApproved[tokenId];
 
@@ -462,7 +462,7 @@ abstract contract ERC721K {
         if (_isZero(to)) revert ERC721__TransferToZeroAddress();
 
         // Clear approvals from the previous owner
-        if (_addressToUint256(approvedAddress) != 0) {
+        if (!_isEqual(approvedAddress, 0)) {
             delete getApproved[tokenId];
         }
 
@@ -530,7 +530,7 @@ abstract contract ERC721K {
         }
 
         // Clear approvals from the previous owner
-        if (_addressToUint256(approvedAddress) != 0) {
+        if (!_isEqual(approvedAddress, 0)) {
             delete getApproved[tokenId];
         }
 
@@ -612,20 +612,11 @@ abstract contract ERC721K {
     }
 
     /**
-     * @dev Casts the address to uint256 without masking.
+     * @dev Simple comparison between address and uint
      */
-    function _addressToUint256(address value) private pure returns (uint256 result) {
+    function _isEqual(address addr, uint num) private pure returns (bool result) {
         assembly {
-            result := value
-        }
-    }
-
-    /**
-     * @dev Casts the boolean to uint256 without branching.
-     */
-    function _boolToUint256(bool value) private pure returns (uint256 result) {
-        assembly {
-            result := value
+            result := eq(addr, num)
         }
     }
 
