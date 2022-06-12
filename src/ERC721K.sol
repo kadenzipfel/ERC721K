@@ -632,7 +632,7 @@ abstract contract ERC721K {
     /**
      * @dev Packs ownership data into single uint
      */
-    function _packMintOwnershipData(address to, uint256 quantity) internal view returns (uint256 packedData) {
+    function _packMintOwnershipData(address to, uint256 quantity) private view returns (uint256 packedData) {
         assembly {
             packedData := or(
                 to, 
@@ -653,7 +653,7 @@ abstract contract ERC721K {
     /**
      * @dev Packs ownership data into single uint
      */
-    function _packTransferOwnershipData(address to) internal view returns (uint256 packedData) {
+    function _packTransferOwnershipData(address to) private view returns (uint256 packedData) {
         assembly {
             packedData := or(
                 to, 
@@ -671,7 +671,7 @@ abstract contract ERC721K {
     /**
      * @dev Packs ownership data into single uint
      */
-    function _packBurnOwnershipData(address from) internal view returns (uint256 packedData) {
+    function _packBurnOwnershipData(address from) private view returns (uint256 packedData) {
         assembly {
             packedData := or(
                 from, 
