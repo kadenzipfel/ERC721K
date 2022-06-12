@@ -545,13 +545,12 @@ abstract contract ERC721K {
 
             // If the next slot may not have been initialized (i.e. `nextInitialized == false`) .
             if (_isZero(prevOwnershipPacked & BITMASK_NEXT_INITIALIZED)) {
-                uint256 nextTokenId = tokenId + 1;
                 // If the next slot's address is zero and not burned (i.e. packed value is zero).
-                if (_isZero(_packedOwnerships[nextTokenId])) {
+                if (_isZero(_packedOwnerships[tokenId + 1])) {
                     // If the next slot is within bounds.
-                    if (nextTokenId != _currentIndex) {
+                    if (tokenId + 1 != _currentIndex) {
                         // Initialize the next slot to maintain correctness for `ownerOf(tokenId + 1)`.
-                        _packedOwnerships[nextTokenId] = prevOwnershipPacked;
+                        _packedOwnerships[tokenId + 1] = prevOwnershipPacked;
                     }
                 }
             }
