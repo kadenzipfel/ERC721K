@@ -306,11 +306,13 @@ abstract contract ERC721K {
      * Returns the packed ownership data of `tokenId`.
      */
     function _packedOwnershipOf(uint256 tokenId) private view returns (uint256) {
-        if (_isZero(tokenId)) revert ERC721__OwnerQueryForNonexistentToken(tokenId);
+        uint256 curr = tokenId;
+
+        if (_isZero(curr)) revert ERC721__OwnerQueryForNonexistentToken(curr);
 
         unchecked {
-            if (tokenId < _currentIndex) {
-                uint256 packed = _packedOwnerships[tokenId];
+            if (curr < _currentIndex) {
+                uint256 packed = _packedOwnerships[curr];
                 // If not burned.
                 if (_isZero(packed & BITMASK_BURNED)) {
                     // Invariant:
@@ -320,7 +322,6 @@ abstract contract ERC721K {
                     //
                     // We can directly compare the packed value.
                     // If the address is zero, packed is zero.
-                    uint256 curr = tokenId;
                     while (_isZero(packed)) {
                         packed = _packedOwnerships[--curr];
                     }
