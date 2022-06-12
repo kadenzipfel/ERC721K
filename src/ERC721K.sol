@@ -390,11 +390,7 @@ abstract contract ERC721K {
     ) internal {
         uint256 startTokenId = _currentIndex;
 
-        bool invalidParams;
-        assembly {
-            invalidParams := or(iszero(to), iszero(quantity))
-        }
-        if (invalidParams) revert ERC721__InvalidMintParams();
+        if (_isOneZero(to, quantity)) revert ERC721__InvalidMintParams();
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
@@ -606,6 +602,15 @@ abstract contract ERC721K {
     function _isEqual(address addr, uint num) private pure returns (bool result) {
         assembly {
             result := eq(addr, num)
+        }
+    }
+
+    /**
+     * @dev Checks if at least one value is 0
+     */
+    function _isOneZero(address addr, uint num) private pure returns (bool result) {
+        assembly {
+            result := or(iszero(addr), iszero(num))
         }
     }
 
