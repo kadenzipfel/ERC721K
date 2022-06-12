@@ -436,7 +436,7 @@ abstract contract ERC721K {
     ) private {
         uint256 prevOwnershipPacked = _packedOwnershipOf(tokenId);
 
-        if (_isEqual(from, prevOwnershipPacked)) revert ERC721__TransferFromIncorrectOwner(from, address(uint160(prevOwnershipPacked)));
+        if (address(uint160(prevOwnershipPacked)) != from) revert ERC721__TransferFromIncorrectOwner(from, address(uint160(prevOwnershipPacked)));
 
         address approvedAddress = getApproved[tokenId];
 
