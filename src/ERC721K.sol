@@ -391,10 +391,7 @@ abstract contract ERC721K {
     ) internal {
         uint256 startTokenId = _currentIndex;
 
-        assembly {
-            if or(iszero(to), iszero(quantity)) { revert(0, 0) }
-        }
-        // if (_isOneZero(to, quantity)) revert ERC721__InvalidMintParams();
+        if (_isOneZero(to, quantity)) revert ERC721__InvalidMintParams();
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
