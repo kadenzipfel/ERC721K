@@ -91,16 +91,6 @@ abstract contract ERC721K {
                              ERC721 STORAGE
     //////////////////////////////////////////////////////////////*/    
 
-    // Compiler will pack this into a single 256bit word.
-    struct TokenOwnership {
-        // The address of the owner.
-        address addr;
-        // Keeps track of the start time of ownership with minimal overhead for tokenomics.
-        uint64 startTimestamp;
-        // Whether the token has been burned.
-        bool burned;
-    }
-
     // The tokenId of the next token to be minted.
     uint256 internal _currentIndex = 1;
 
