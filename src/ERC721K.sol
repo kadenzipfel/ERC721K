@@ -452,15 +452,19 @@ abstract contract ERC721K {
 
         if (address(uint160(prevOwnershipPacked)) != from) revert ERC721__TransferFromIncorrectOwner(from, address(uint160(prevOwnershipPacked)));
 
+        address approvedAddress = getApproved[tokenId];
+
         bool isApprovedOrOwner = (msg.sender == from ||
-            getApproved[tokenId] == msg.sender) ||
+            approvedAddress == msg.sender) ||
             isApprovedForAll[from][msg.sender];
 
         if (!isApprovedOrOwner) revert ERC721__TransferCallerNotOwnerNorApproved(msg.sender);
         if (_isZero(to)) revert ERC721__TransferToZeroAddress();
 
         // Clear approvals from the previous owner
-        _approve(address(0), tokenId, from);
+        if (_addressToUint256(approvedAddress) != 0) {
+            delete getApproved[tokenId];
+        }
 
         // Underflow of the sender's balance is impossible because we check for
         // ownership above and the recipient's balance can't realistically overflow.
@@ -490,8 +494,6 @@ abstract contract ERC721K {
             }
         }
 
-        delete getApproved[tokenId];
-
         emit Transfer(from, to, tokenId);
     }
 
@@ -517,16 +519,20 @@ abstract contract ERC721K {
 
         address from = address(uint160(prevOwnershipPacked));
 
+        address approvedAddress = getApproved[tokenId];
+
         if (approvalCheck) {
             bool isApprovedOrOwner = (msg.sender == from ||
-                getApproved[tokenId] == msg.sender) ||
+                approvedAddress == msg.sender) ||
                 isApprovedForAll[from][msg.sender];
 
             if (!isApprovedOrOwner) revert ERC721__TransferCallerNotOwnerNorApproved(msg.sender);
         }
 
         // Clear approvals from the previous owner
-        _approve(address(0), tokenId, from);
+        if (_addressToUint256(approvedAddress) != 0) {
+            delete getApproved[tokenId];
+        }
 
         // Underflow of the sender's balance is impossible because we check for
         // ownership above and the recipient's balance can't realistically overflow.
@@ -560,8 +566,6 @@ abstract contract ERC721K {
                 }
             }
         }
-
-        delete getApproved[tokenId];
 
         emit Transfer(from, address(0), tokenId);
 
