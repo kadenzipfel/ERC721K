@@ -411,10 +411,11 @@ abstract contract ERC721K {
             // - `nextInitialized` to `quantity == 1`.
             _packedOwnerships[startTokenId] = _packMintOwnershipData(to, quantity);
 
-            uint256 offset;
+            uint256 offset = startTokenId;
+            uint256 end = quantity + startTokenId;
             do {
-                emit Transfer(address(0), to, startTokenId + offset++);
-            } while (offset < quantity);
+                emit Transfer(address(0), to, offset++);
+            } while (offset < end);
 
             _currentIndex = startTokenId + quantity;
         }
